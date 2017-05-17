@@ -22,7 +22,7 @@ for measurement with id 7924888:
 ```
 curl http://127.0.0.1:9400/metrics?measurement_id=7924888
 ```
-Result:
+the result should look similar to this one:
 ```
 atlas_ping_success{measurement="7012288",probe="10563"} 1
 atlas_ping_min_latency{measurement="7012288",probe="10563"} 153.079780
