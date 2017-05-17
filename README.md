@@ -11,6 +11,28 @@ Required Go Version: 1.8+
 go get github.com/czerwonk/atlas_exporter
 ```
 
+## Usage
+### Start server
+```
+./atlas_exporter
+```
+
+### Call metrics URI
+for measurement with id 7924888:
+```
+curl http://127.0.0.1:9400/metrics?measurement_id=7924888
+```
+Result:
+```
+atlas_ping_success{measurement="7012288",probe="10563"} 1
+atlas_ping_min_latency{measurement="7012288",probe="10563"} 153.079780
+atlas_ping_max_latency{measurement="7012288",probe="10563"} 154.925535
+atlas_ping_avg_latency{measurement="7012288",probe="10563"} 153.697307
+atlas_ping_sent{measurement="7012288",probe="10563"} 3
+atlas_ping_received{measurement="7012288",probe="10563"} 3
+...
+```
+
 ## Features
 * ping measurements (success, min/max/avg latency)
 * traceroute measurements (success, hop count)
