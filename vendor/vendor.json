@@ -1,0 +1,85 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "/7HUbIO/Fu3yYyajsbXvcIXpalg=",
+			"path": "github.com/DNS-OARC/ripeatlas",
+			"revision": "2e13bffacc387a394c95146da3b5ef14e4c1c979",
+			"revisionTime": "2017-04-25T11:28:06Z"
+		},
+		{
+			"checksumSHA1": "qS+86euyoPUqqQxTOqmoQUAN7xQ=",
+			"path": "github.com/DNS-OARC/ripeatlas/measurement",
+			"revision": "2e13bffacc387a394c95146da3b5ef14e4c1c979",
+			"revisionTime": "2017-04-25T11:28:06Z"
+		},
+		{
+			"checksumSHA1": "cLX0JwWlJQEbYNdYMZcAndMRUM4=",
+			"path": "github.com/DNS-OARC/ripeatlas/measurement/dns",
+			"revision": "2e13bffacc387a394c95146da3b5ef14e4c1c979",
+			"revisionTime": "2017-04-25T11:28:06Z"
+		},
+		{
+			"checksumSHA1": "yphNHbEMWkBxwL4w0cPyyirYksc=",
+			"path": "github.com/DNS-OARC/ripeatlas/measurement/http",
+			"revision": "2e13bffacc387a394c95146da3b5ef14e4c1c979",
+			"revisionTime": "2017-04-25T11:28:06Z"
+		},
+		{
+			"checksumSHA1": "DbUkovrdRX/129dKtr0nHHjo4vE=",
+			"path": "github.com/DNS-OARC/ripeatlas/measurement/ntp",
+			"revision": "2e13bffacc387a394c95146da3b5ef14e4c1c979",
+			"revisionTime": "2017-04-25T11:28:06Z"
+		},
+		{
+			"checksumSHA1": "rNQOBdFG/Ir/hfcmoL5WRjjVWq8=",
+			"path": "github.com/DNS-OARC/ripeatlas/measurement/ping",
+			"revision": "2e13bffacc387a394c95146da3b5ef14e4c1c979",
+			"revisionTime": "2017-04-25T11:28:06Z"
+		},
+		{
+			"checksumSHA1": "VZOcA0V18P4a+NEv5tq39PrIAwU=",
+			"path": "github.com/DNS-OARC/ripeatlas/measurement/sslcert",
+			"revision": "2e13bffacc387a394c95146da3b5ef14e4c1c979",
+			"revisionTime": "2017-04-25T11:28:06Z"
+		},
+		{
+			"checksumSHA1": "0sFVS3CHOUAoQ0f3KGoA+C4+dnY=",
+			"path": "github.com/DNS-OARC/ripeatlas/measurement/traceroute",
+			"revision": "2e13bffacc387a394c95146da3b5ef14e4c1c979",
+			"revisionTime": "2017-04-25T11:28:06Z"
+		},
+		{
+			"checksumSHA1": "hEnH6sgR83Qfx7UNnphNNlelmj0=",
+			"path": "github.com/gorilla/websocket",
+			"revision": "a91eba7f97777409bc2c443f5534d41dd20c5720",
+			"revisionTime": "2017-03-19T17:27:27Z"
+		},
+		{
+			"checksumSHA1": "2b05iFLBjNwhqBQtFtIuC+/ezfw=",
+			"path": "github.com/graarh/golang-socketio",
+			"revision": "2c44953b9b5fcd4da83ec8816f002ce68a12ef2d",
+			"revisionTime": "2017-05-10T16:27:25Z"
+		},
+		{
+			"checksumSHA1": "Yy4eN9/8WEN6w3zXKljHUEW6iC0=",
+			"path": "github.com/graarh/golang-socketio/protocol",
+			"revision": "2c44953b9b5fcd4da83ec8816f002ce68a12ef2d",
+			"revisionTime": "2017-05-10T16:27:25Z"
+		},
+		{
+			"checksumSHA1": "sJu0Oxc+CTNpsJmOjtBXRkGqB3I=",
+			"path": "github.com/graarh/golang-socketio/transport",
+			"revision": "2c44953b9b5fcd4da83ec8816f002ce68a12ef2d",
+			"revisionTime": "2017-05-10T16:27:25Z"
+		},
+		{
+			"checksumSHA1": "sEvLI3uHTq1udtfFl788bIXW3CM=",
+			"path": "github.com/miekg/dns",
+			"revision": "f282f80e243cc2bf8f6410c30d821b93b794e168",
+			"revisionTime": "2017-05-01T15:26:13Z"
+		}
+	],
+	"rootPath": "github.com/czerwonk/atlas_exporter"
+}
