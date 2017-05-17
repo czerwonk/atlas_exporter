@@ -4,6 +4,8 @@ Metric exporter for RIPE atlas measurement results
 ## Remarks
 this is an early version, more features will be added step by step
 
+Required Go Version: 1.8+
+
 ## Install
 ```
 go get github.com/czerwonk/atlas_exporter
