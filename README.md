@@ -42,6 +42,6 @@ This software uses components of the following projects
 * Go bindings for RIPE Atlas API (https://github.com/DNS-OARC/ripeatlas)
 
 ## The RIPE Atlas Project
-see htt://atlas.ripe.net
+see http://atlas.ripe.net
 
 [travis]: https://travis-ci.org/czerwonk/atlas_exporter
