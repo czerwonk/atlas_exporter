@@ -10,6 +10,7 @@ import (
 	"github.com/DNS-OARC/ripeatlas"
 	"github.com/DNS-OARC/ripeatlas/measurement"
 	"github.com/czerwonk/atlas_exporter/ping"
+	"github.com/czerwonk/atlas_exporter/probe"
 	"github.com/czerwonk/atlas_exporter/traceroute"
 )
 
@@ -49,16 +50,35 @@ func getMeasurement(id string) ([]Metric, error) {
 }
 
 func convertToMetric(r *measurement.Result, out chan Metric) {
+	var m Metric
+
 	if r.Type() == "ping" {
-		out <- ping.FromResult(r)
-		return
+		m = ping.FromResult(r)
 	}
 
 	if r.Type() == "traceroute" {
-		out <- traceroute.FromResult(r)
+		m = traceroute.FromResult(r)
+	}
+
+	if m != nil {
+		setAsnForMetric(r, m)
+	} else {
+		log.Printf("Type %s is not yet supported\n", r.Type())
+	}
+
+	out <- m
+}
+func setAsnForMetric(r *measurement.Result, m Metric) {
+	p, err := probe.Get(r.PrbId())
+
+	if err != nil {
+		log.Printf("Could not get information for probe %d: %v\n", r.PrbId(), err)
 		return
 	}
 
-	log.Printf("Type %s is not yet supported\n", r.Type())
-	out <- nil
+	if r.Af() == 4 {
+		m.SetAsn(p.Asn4)
+	} else {
+		m.SetAsn(p.Asn6)
+	}
 }

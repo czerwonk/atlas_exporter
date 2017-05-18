@@ -14,11 +14,14 @@ type PingMetric struct {
 	Avg     float64
 	Sent    int
 	Rcvd    int
-	Asn     string
+	Dup     int
+	Ttl     int
+	Size    int
+	Asn     int
 }
 
 func FromResult(r *measurement.Result) *PingMetric {
-	return &PingMetric{ProbeId: r.PrbId(), Max: r.Max(), Min: r.Min(), Rcvd: r.Rcvd(), Avg: r.Avg(), Sent: r.Sent()}
+	return &PingMetric{ProbeId: r.PrbId(), Max: r.Max(), Min: r.Min(), Rcvd: r.Rcvd(), Avg: r.Avg(), Sent: r.Sent(), Dup: r.Dup(), Ttl: r.Ttl(), Size: r.Size()}
 }
 
 func (p *PingMetric) Write(w io.Writer, pk string) {
@@ -33,13 +36,16 @@ func (p *PingMetric) Write(w io.Writer, pk string) {
 
 	p.writeMetric(pk, "sent", p.Sent, w)
 	p.writeMetric(pk, "received", p.Rcvd, w)
+	p.writeMetric(pk, "dup", p.Dup, w)
+	p.writeMetric(pk, "ttl", p.Ttl, w)
+	p.writeMetric(pk, "size", p.Size, w)
 }
 
 func (p *PingMetric) writeMetric(pk string, name string, value interface{}, w io.Writer) {
 	const prefix = "atlas_ping_"
-	fmt.Fprintf(w, prefix+"%s{measurement=\"%s\",probe=\"%d\",asn=\"%s\"} %v\n", name, pk, p.ProbeId, p.Asn, value)
+	fmt.Fprintf(w, prefix+"%s{measurement=\"%s\",probe=\"%d\",asn=\"%d\"} %v\n", name, pk, p.ProbeId, p.Asn, value)
 }
 
-func (p *PingMetric) SetAsn(asn string) {
+func (p *PingMetric) SetAsn(asn int) {
 	p.Asn = asn
 }
