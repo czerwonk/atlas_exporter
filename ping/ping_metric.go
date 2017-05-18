@@ -14,6 +14,7 @@ type PingMetric struct {
 	Avg     float64
 	Sent    int
 	Rcvd    int
+	Asn     string
 }
 
 func FromResult(r *measurement.Result) *PingMetric {
@@ -21,16 +22,24 @@ func FromResult(r *measurement.Result) *PingMetric {
 }
 
 func (p *PingMetric) Write(w io.Writer, pk string) {
-	const prefix = "atlas_ping_"
 	if p.Min > 0 {
-		fmt.Fprintf(w, prefix+"success{measurement=\"%s\",probe=\"%d\"} 1\n", pk, p.ProbeId)
-		fmt.Fprintf(w, prefix+"min_latency{measurement=\"%s\",probe=\"%d\"} %f\n", pk, p.ProbeId, p.Min)
-		fmt.Fprintf(w, prefix+"max_latency{measurement=\"%s\",probe=\"%d\"} %f\n", pk, p.ProbeId, p.Max)
-		fmt.Fprintf(w, prefix+"avg_latency{measurement=\"%s\",probe=\"%d\"} %f\n", pk, p.ProbeId, p.Avg)
+		p.writeMetric(pk, "success", 1, w)
+		p.writeMetric(pk, "min_latency", p.Min, w)
+		p.writeMetric(pk, "max_latency", p.Max, w)
+		p.writeMetric(pk, "avg_latency", p.Avg, w)
 	} else {
-		fmt.Fprintf(w, prefix+"success{measurement=\"%s\",probe=\"%d\"} 0\n", pk, p.ProbeId)
+		p.writeMetric(pk, "success", 0, w)
 	}
 
-	fmt.Fprintf(w, prefix+"sent{measurement=\"%s\",probe=\"%d\"} %d\n", pk, p.ProbeId, p.Sent)
-	fmt.Fprintf(w, prefix+"received{measurement=\"%s\",probe=\"%d\"} %d\n", pk, p.ProbeId, p.Rcvd)
+	p.writeMetric(pk, "sent", p.Sent, w)
+	p.writeMetric(pk, "received", p.Rcvd, w)
+}
+
+func (p *PingMetric) writeMetric(pk string, name string, value interface{}, w io.Writer) {
+	const prefix = "atlas_ping_"
+	fmt.Fprintf(w, prefix+"%s{measurement=\"%s\",probe=\"%d\",asn=\"%s\"} %v\n", name, pk, p.ProbeId, p.Asn, value)
+}
+
+func (p *PingMetric) SetAsn(asn string) {
+	p.Asn = asn
 }

@@ -11,6 +11,7 @@ type TracerouteMetric struct {
 	ProbeId  int
 	HopCount int
 	Success  int
+	Asn      string
 }
 
 func FromResult(r *measurement.Result) *TracerouteMetric {
@@ -34,7 +35,15 @@ func getTracerouteSuccess(r *measurement.Result) int {
 }
 
 func (t *TracerouteMetric) Write(w io.Writer, pk string) {
+	t.writeMetric(pk, "hops", t.HopCount, w)
+	t.writeMetric(pk, "success", t.Success, w)
+}
+
+func (t *TracerouteMetric) writeMetric(pk string, name string, value interface{}, w io.Writer) {
 	const prefix = "atlas_traceroute_"
-	fmt.Fprintf(w, prefix+"hops{measurement=\"%s\",probe=\"%d\"} %d\n", pk, t.ProbeId, t.HopCount)
-	fmt.Fprintf(w, prefix+"success{measurement=\"%s\",probe=\"%d\"} %d\n", pk, t.ProbeId, t.Success)
+	fmt.Fprintf(w, prefix+"%s{measurement=\"%s\",probe=\"%d\",asn=\"%s\"} %v\n", name, pk, t.ProbeId, t.Asn, value)
+}
+
+func (t *TracerouteMetric) SetAsn(asn string) {
+	t.Asn = asn
 }
