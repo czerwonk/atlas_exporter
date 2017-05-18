@@ -49,3 +49,7 @@ func (p *PingMetric) writeMetric(pk string, name string, value interface{}, w io
 func (p *PingMetric) SetAsn(asn int) {
 	p.Asn = asn
 }
+
+func (p *PingMetric) Isvalid() bool {
+	return p.Asn > 0
+}

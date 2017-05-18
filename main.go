@@ -15,9 +15,10 @@ import (
 const version string = "0.2.0"
 
 var (
-	showVersion   = flag.Bool("version", false, "Print version information.")
-	listenAddress = flag.String("web.listen-address", ":9400", "Address on which to expose metrics and web interface.")
-	metricsPath   = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
+	showVersion          = flag.Bool("version", false, "Print version information.")
+	listenAddress        = flag.String("web.listen-address", ":9400", "Address on which to expose metrics and web interface.")
+	metricsPath          = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
+	filterInvalidResults = flag.Bool("filter.invalid-results", true, "Exclude offline/incompatible probes")
 )
 
 func init() {

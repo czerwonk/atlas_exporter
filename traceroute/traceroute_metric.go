@@ -53,3 +53,7 @@ func (t *TracerouteMetric) writeMetric(pk string, name string, value interface{}
 func (t *TracerouteMetric) SetAsn(asn int) {
 	t.Asn = asn
 }
+
+func (t *TracerouteMetric) Isvalid() bool {
+	return (t.Success == 1 || t.HopCount > 1) && t.Asn > 0
+}

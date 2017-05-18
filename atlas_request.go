@@ -38,7 +38,7 @@ func getMeasurement(id string) ([]Metric, error) {
 	for i := 0; i < count; i++ {
 		select {
 		case m := <-ch:
-			if m != nil {
+			if m != nil && (!*filterInvalidResults || m.Isvalid()) {
 				res = append(res, m)
 			}
 		case <-time.After(60 * time.Second):
