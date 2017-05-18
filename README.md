@@ -24,12 +24,10 @@ curl http://127.0.0.1:9400/metrics?measurement_id=7924888
 ```
 the result should look similar to this one:
 ```
-atlas_ping_success{measurement="7012288",probe="10563"} 1
-atlas_ping_min_latency{measurement="7012288",probe="10563"} 153.079780
-atlas_ping_max_latency{measurement="7012288",probe="10563"} 154.925535
-atlas_ping_avg_latency{measurement="7012288",probe="10563"} 153.697307
-atlas_ping_sent{measurement="7012288",probe="10563"} 3
-atlas_ping_received{measurement="7012288",probe="10563"} 3
+atlas_traceroute_hops{measurement="7924888",probe="15072",asn="20375"} 13
+atlas_traceroute_success{measurement="7924888",probe="15072",asn="20375"} 1
+atlas_traceroute_hops{measurement="7924888",probe="15093",asn="3265"} 8
+atlas_traceroute_success{measurement="7924888",probe="15093",asn="3265"} 1
 ...
 ```
 
