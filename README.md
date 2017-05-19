@@ -34,6 +34,8 @@ atlas_traceroute_success{measurement="7924888",probe="15093",asn="3265"} 1
 ## Features
 * ping measurements (success, min/max/avg latency, dups, size)
 * traceroute measurements (success, hop count, rtt)
+* ntp
+* dns (succress, rtt)
 
 ## Third Party Components
 This software uses components of the following projects
