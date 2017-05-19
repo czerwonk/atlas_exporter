@@ -9,6 +9,7 @@ import (
 
 	"github.com/DNS-OARC/ripeatlas"
 	"github.com/DNS-OARC/ripeatlas/measurement"
+	"github.com/czerwonk/atlas_exporter/dns"
 	"github.com/czerwonk/atlas_exporter/ntp"
 	"github.com/czerwonk/atlas_exporter/ping"
 	"github.com/czerwonk/atlas_exporter/probe"
@@ -63,6 +64,10 @@ func convertToMetric(r *measurement.Result, out chan Metric) {
 
 	if r.Type() == "ntp" {
 		m = ntp.FromResult(r)
+	}
+
+	if r.Type() == "dns" {
+		m = dns.FromResult(r)
 	}
 
 	if m != nil {
