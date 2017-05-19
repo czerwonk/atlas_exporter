@@ -8,15 +8,16 @@ import (
 )
 
 type TracerouteMetric struct {
-	ProbeId  int
-	HopCount int
-	Success  int
-	Rtt      float64
-	Asn      int
+	ProbeId   int
+	HopCount  int
+	Success   int
+	Rtt       float64
+	Asn       int
+	IpVersion int
 }
 
 func FromResult(r *measurement.Result) *TracerouteMetric {
-	m := &TracerouteMetric{ProbeId: r.PrbId(), HopCount: len(r.TracerouteResults())}
+	m := &TracerouteMetric{ProbeId: r.PrbId(), HopCount: len(r.TracerouteResults()), IpVersion: r.Af()}
 	processLastHop(r, m)
 
 	return m
@@ -47,7 +48,7 @@ func (t *TracerouteMetric) Write(w io.Writer, pk string) {
 
 func (t *TracerouteMetric) writeMetric(pk string, name string, value interface{}, w io.Writer) {
 	const prefix = "atlas_traceroute_"
-	fmt.Fprintf(w, prefix+"%s{measurement=\"%s\",probe=\"%d\",asn=\"%d\"} %v\n", name, pk, t.ProbeId, t.Asn, value)
+	fmt.Fprintf(w, prefix+"%s{measurement=\"%s\",probe=\"%d\",asn=\"%d\",ip_version=\"%d\"} %v\n", name, pk, t.ProbeId, t.Asn, t.IpVersion, value)
 }
 
 func (t *TracerouteMetric) SetAsn(asn int) {
