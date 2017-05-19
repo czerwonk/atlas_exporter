@@ -30,8 +30,11 @@ func FromResult(r *measurement.Result) *DnsMetric {
 }
 
 func (m *DnsMetric) Write(w io.Writer, pk string) {
-	m.writeMetric(pk, "rtt", m.Rtt, w)
 	m.writeMetric(pk, "success", m.Success, w)
+
+	if m.Rtt > 0 {
+		m.writeMetric(pk, "rtt", m.Rtt, w)
+	}
 }
 
 func (m *DnsMetric) writeMetric(pk string, name string, value interface{}, w io.Writer) {
