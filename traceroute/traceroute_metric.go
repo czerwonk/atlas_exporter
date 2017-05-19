@@ -37,24 +37,24 @@ func processLastHop(r *measurement.Result, m *TracerouteMetric) {
 	}
 }
 
-func (t *TracerouteMetric) Write(w io.Writer, pk string) {
-	t.writeMetric(pk, "hops", t.HopCount, w)
-	t.writeMetric(pk, "success", t.Success, w)
+func (m *TracerouteMetric) Write(w io.Writer, pk string) {
+	m.writeMetric(pk, "hops", m.HopCount, w)
+	m.writeMetric(pk, "success", m.Success, w)
 
-	if t.Rtt > 0 {
-		t.writeMetric(pk, "rtt", t.Rtt, w)
+	if m.Rtt > 0 {
+		m.writeMetric(pk, "rtt", m.Rtt, w)
 	}
 }
 
-func (t *TracerouteMetric) writeMetric(pk string, name string, value interface{}, w io.Writer) {
+func (m *TracerouteMetric) writeMetric(pk string, name string, value interface{}, w io.Writer) {
 	const prefix = "atlas_traceroute_"
-	fmt.Fprintf(w, prefix+"%s{measurement=\"%s\",probe=\"%d\",asn=\"%d\",ip_version=\"%d\"} %v\n", name, pk, t.ProbeId, t.Asn, t.IpVersion, value)
+	fmt.Fprintf(w, prefix+"%s{measurement=\"%s\",probe=\"%d\",asn=\"%d\",ip_version=\"%d\"} %v\n", name, pk, m.ProbeId, m.Asn, m.IpVersion, value)
 }
 
-func (t *TracerouteMetric) SetAsn(asn int) {
-	t.Asn = asn
+func (m *TracerouteMetric) SetAsn(asn int) {
+	m.Asn = asn
 }
 
-func (t *TracerouteMetric) Isvalid() bool {
-	return (t.Success == 1 || t.HopCount > 1) && t.Asn > 0
+func (m *TracerouteMetric) Isvalid() bool {
+	return (m.Success == 1 || m.HopCount > 1) && m.Asn > 0
 }

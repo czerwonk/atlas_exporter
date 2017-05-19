@@ -9,6 +9,7 @@ import (
 
 	"github.com/DNS-OARC/ripeatlas"
 	"github.com/DNS-OARC/ripeatlas/measurement"
+	"github.com/czerwonk/atlas_exporter/ntp"
 	"github.com/czerwonk/atlas_exporter/ping"
 	"github.com/czerwonk/atlas_exporter/probe"
 	"github.com/czerwonk/atlas_exporter/traceroute"
@@ -58,6 +59,10 @@ func convertToMetric(r *measurement.Result, out chan Metric) {
 
 	if r.Type() == "traceroute" {
 		m = traceroute.FromResult(r)
+	}
+
+	if r.Type() == "ntp" {
+		m = ntp.FromResult(r)
 	}
 
 	if m != nil {
