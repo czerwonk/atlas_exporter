@@ -9,6 +9,8 @@ import (
 
 type NtpMetric struct {
 	ProbeId        int
+	DstAddr        string
+	DstName        string
 	Poll           float64
 	Precision      float64
 	RootDelay      float64
@@ -19,7 +21,7 @@ type NtpMetric struct {
 }
 
 func FromResult(r *measurement.Result) *NtpMetric {
-	return &NtpMetric{ProbeId: r.PrbId(), Poll: r.Poll(), Precision: r.Precision(), RootDelay: r.RootDelay(), RootDispersion: r.RootDispersion(), Version: r.Version(), IpVersion: r.Af()}
+	return &NtpMetric{ProbeId: r.PrbId(), DstAddr: r.DstAddr(), DstName: r.DstName(), Poll: r.Poll(), Precision: r.Precision(), RootDelay: r.RootDelay(), RootDispersion: r.RootDispersion(), Version: r.Version(), IpVersion: r.Af()}
 }
 
 func (m *NtpMetric) Write(w io.Writer, pk string) {
@@ -32,7 +34,7 @@ func (m *NtpMetric) Write(w io.Writer, pk string) {
 
 func (m *NtpMetric) writeMetric(pk string, name string, value interface{}, w io.Writer) {
 	const prefix = "atlas_ntp_"
-	fmt.Fprintf(w, prefix+"%s{measurement=\"%s\",probe=\"%d\",asn=\"%d\",ip_version=\"%d\"} %v\n", name, pk, m.ProbeId, m.Asn, m.IpVersion, value)
+	fmt.Fprintf(w, prefix+"%s{measurement=\"%s\",probe=\"%d\",dst_addr=\"%s\",dst_name=\"%s\",asn=\"%d\",ip_version=\"%d\"} %v\n", name, pk, m.ProbeId, m.DstAddr, m.DstName, m.Asn, m.IpVersion, value)
 }
 
 func (m *NtpMetric) SetAsn(asn int) {

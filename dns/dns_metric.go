@@ -9,6 +9,7 @@ import (
 
 type DnsMetric struct {
 	ProbeId   int
+	DstAddr   string
 	Rtt       float64
 	Asn       int
 	Success   int
@@ -26,7 +27,7 @@ func FromResult(r *measurement.Result) *DnsMetric {
 		success = 1
 	}
 
-	return &DnsMetric{ProbeId: r.PrbId(), Rtt: rtt, Success: success, IpVersion: r.Af()}
+	return &DnsMetric{ProbeId: r.PrbId(), DstAddr: r.DstAddr(), Rtt: rtt, Success: success, IpVersion: r.Af()}
 }
 
 func (m *DnsMetric) Write(w io.Writer, pk string) {
@@ -39,7 +40,7 @@ func (m *DnsMetric) Write(w io.Writer, pk string) {
 
 func (m *DnsMetric) writeMetric(pk string, name string, value interface{}, w io.Writer) {
 	const prefix = "atlas_dns_"
-	fmt.Fprintf(w, prefix+"%s{measurement=\"%s\",probe=\"%d\",asn=\"%d\",ip_version=\"%d\"} %v\n", name, pk, m.ProbeId, m.Asn, m.IpVersion, value)
+	fmt.Fprintf(w, prefix+"%s{measurement=\"%s\",probe=\"%d\",dst_addr=\"%s\",asn=\"%d\",ip_version=\"%d\"} %v\n", name, pk, m.ProbeId, m.DstAddr, m.Asn, m.IpVersion, value)
 }
 
 func (m *DnsMetric) SetAsn(asn int) {
