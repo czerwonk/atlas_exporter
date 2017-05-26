@@ -8,7 +8,12 @@ Metric exporter for RIPE atlas measurement results
 
 ## Install
 ```
-go get github.com/czerwonk/atlas_exporter
+go get -u github.com/czerwonk/atlas_exporter
+```
+
+## Docker
+```
+docker run -d --restart unless-stopped -p 9400:9400 czerwonk/atlas_exporter
 ```
 
 ## Usage
