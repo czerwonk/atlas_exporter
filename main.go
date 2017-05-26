@@ -43,6 +43,7 @@ func main() {
 func printVersion() {
 	fmt.Println("atlas_exporter")
 	fmt.Printf("Version: %s\n", version)
+	fmt.Println("Author(s): Daniel Czerwonk")
 	fmt.Println("Metric exporter for RIPE Atlas measurements")
 	fmt.Println("This software uses Go bindings from the DNS-OARC project (https://github.com/DNS-OARC/ripeatlas)")
 }
