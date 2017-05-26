@@ -73,6 +73,7 @@ atlas_traceroute_hops{asn="133752",dst_addr="8.8.8.8",dst_name="8.8.8.8",ip_vers
 ## Third Party Components
 This software uses components of the following projects
 * Go bindings for RIPE Atlas API (https://github.com/DNS-OARC/ripeatlas)
+* Prometheus Go client library (github.com/prometheus/client_golang)
 
 ## Prometheus
 see https://prometheus.io/
