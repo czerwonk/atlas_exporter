@@ -65,6 +65,9 @@ atlas_traceroute_success{measurement="7924888",probe="15093",asn="3265"} 1
 This software uses components of the following projects
 * Go bindings for RIPE Atlas API (https://github.com/DNS-OARC/ripeatlas)
 
+## Prometheus
+see https://prometheus.io/
+
 ## The RIPE Atlas Project
 see http://atlas.ripe.net
 
