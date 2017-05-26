@@ -1,11 +1,32 @@
 package traceroute
 
 import (
-	"fmt"
-	"io"
+	"strconv"
 
 	"github.com/DNS-OARC/ripeatlas/measurement"
+	"github.com/prometheus/client_golang/prometheus"
 )
+
+const (
+	ns  = "atlas"
+	sub = "traceroute"
+)
+
+var (
+	labels      []string
+	successDesc *prometheus.Desc
+	hopDesc     *prometheus.Desc
+	rttDesc     *prometheus.Desc
+)
+
+func init() {
+	labels = make([]string, 0)
+	labels = append(labels, "measurement", "probe", "dst_addr", "dst_name", "asn", "ip_version")
+
+	successDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "success"), "Destination was reachable", labels, nil)
+	hopDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "hops"), "Number of hops", labels, nil)
+	rttDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "rtt"), "Round trip time in ms", labels, nil)
+}
 
 type TracerouteMetric struct {
 	ProbeId   int
@@ -39,18 +60,22 @@ func processLastHop(r *measurement.Result, m *TracerouteMetric) {
 	}
 }
 
-func (m *TracerouteMetric) Write(w io.Writer, pk string) {
-	m.writeMetric(pk, "hops", m.HopCount, w)
-	m.writeMetric(pk, "success", m.Success, w)
+func (m *TracerouteMetric) GetMetrics(ch chan<- prometheus.Metric, pk string) {
+	labelValues := make([]string, 0)
+	labelValues = append(labelValues, pk, strconv.Itoa(m.ProbeId), m.DstAddr, m.DstName, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion))
+
+	ch <- prometheus.MustNewConstMetric(successDesc, prometheus.GaugeValue, float64(m.Success), labelValues...)
+	ch <- prometheus.MustNewConstMetric(hopDesc, prometheus.GaugeValue, float64(m.HopCount), labelValues...)
 
 	if m.Rtt > 0 {
-		m.writeMetric(pk, "rtt", m.Rtt, w)
+		ch <- prometheus.MustNewConstMetric(rttDesc, prometheus.GaugeValue, m.Rtt, labelValues...)
 	}
 }
 
-func (m *TracerouteMetric) writeMetric(pk string, name string, value interface{}, w io.Writer) {
-	const prefix = "atlas_traceroute_"
-	fmt.Fprintf(w, prefix+"%s{measurement=\"%s\",probe=\"%d\",dst_addr=\"%s\",dst_name=\"%s\",asn=\"%d\",ip_version=\"%d\"} %v\n", name, pk, m.ProbeId, m.DstAddr, m.DstName, m.Asn, m.IpVersion, value)
+func (m *TracerouteMetric) Describe(ch chan<- *prometheus.Desc) {
+	ch <- successDesc
+	ch <- hopDesc
+	ch <- rttDesc
 }
 
 func (m *TracerouteMetric) SetAsn(asn int) {

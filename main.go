@@ -1,18 +1,19 @@
 package main
 
 import (
-	"bufio"
-	"bytes"
 	"errors"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/czerwonk/atlas_exporter/metric"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-const version string = "0.2.3"
+const version string = "0.3.0"
 
 var (
 	showVersion          = flag.Bool("version", false, "Print version information.")
@@ -54,27 +55,18 @@ func startServer() {
 	log.Fatal(http.ListenAndServe(*listenAddress, nil))
 }
 
-func errorHandler(f func(io.Writer, *http.Request) error) http.HandlerFunc {
+func errorHandler(f func(http.ResponseWriter, *http.Request) error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var buf bytes.Buffer
-		wr := bufio.NewWriter(&buf)
-		err := f(wr, r)
-		wr.Flush()
+		err := f(w, r)
 
 		if err != nil {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-
-		_, err = w.Write(buf.Bytes())
-
-		if err != nil {
-			log.Println(err)
-		}
 	}
 }
 
-func handleMetricsRequest(w io.Writer, r *http.Request) error {
+func handleMetricsRequest(w http.ResponseWriter, r *http.Request) error {
 	id := r.URL.Query().Get("measurement_id")
 
 	if len(id) == 0 {
@@ -87,8 +79,11 @@ func handleMetricsRequest(w io.Writer, r *http.Request) error {
 		return err
 	}
 
-	for _, m := range metrics {
-		m.Write(w, id)
+	if len(metrics) > 0 {
+		reg := prometheus.NewRegistry()
+		reg.MustRegister(metric.NewMetricCollector(id, metrics))
+
+		promhttp.HandlerFor(reg, promhttp.HandlerOpts{}).ServeHTTP(w, r)
 	}
 
 	return nil

@@ -1,11 +1,30 @@
 package dns
 
 import (
-	"fmt"
-	"io"
+	"strconv"
 
 	"github.com/DNS-OARC/ripeatlas/measurement"
+	"github.com/prometheus/client_golang/prometheus"
 )
+
+const (
+	ns  = "atlas"
+	sub = "dns"
+)
+
+var (
+	labels      []string
+	successDesc *prometheus.Desc
+	rttDesc     *prometheus.Desc
+)
+
+func init() {
+	labels = make([]string, 0)
+	labels = append(labels, "measurement", "probe", "dst_addr", "asn", "ip_version")
+
+	successDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "success"), "Destination was reachable", labels, nil)
+	rttDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "rtt"), "Roundtrip time in ms", labels, nil)
+}
 
 type DnsMetric struct {
 	ProbeId   int
@@ -30,17 +49,21 @@ func FromResult(r *measurement.Result) *DnsMetric {
 	return &DnsMetric{ProbeId: r.PrbId(), DstAddr: r.DstAddr(), Rtt: rtt, Success: success, IpVersion: r.Af()}
 }
 
-func (m *DnsMetric) Write(w io.Writer, pk string) {
-	m.writeMetric(pk, "success", m.Success, w)
+func (m *DnsMetric) GetMetrics(ch chan<- prometheus.Metric, pk string) {
+	labelValues := make([]string, 0)
+	labelValues = append(labelValues, pk, strconv.Itoa(m.ProbeId), m.DstAddr, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion))
 
 	if m.Rtt > 0 {
-		m.writeMetric(pk, "rtt", m.Rtt, w)
+		ch <- prometheus.MustNewConstMetric(successDesc, prometheus.GaugeValue, 1, labelValues...)
+		ch <- prometheus.MustNewConstMetric(rttDesc, prometheus.GaugeValue, m.Rtt, labelValues...)
+	} else {
+		ch <- prometheus.MustNewConstMetric(successDesc, prometheus.GaugeValue, 0, labelValues...)
 	}
 }
 
-func (m *DnsMetric) writeMetric(pk string, name string, value interface{}, w io.Writer) {
-	const prefix = "atlas_dns_"
-	fmt.Fprintf(w, prefix+"%s{measurement=\"%s\",probe=\"%d\",dst_addr=\"%s\",asn=\"%d\",ip_version=\"%d\"} %v\n", name, pk, m.ProbeId, m.DstAddr, m.Asn, m.IpVersion, value)
+func (m *DnsMetric) Describe(ch chan<- *prometheus.Desc) {
+	ch <- successDesc
+	ch <- rttDesc
 }
 
 func (m *DnsMetric) SetAsn(asn int) {

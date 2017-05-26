@@ -1,11 +1,36 @@
 package ntp
 
 import (
-	"fmt"
-	"io"
+	"strconv"
 
 	"github.com/DNS-OARC/ripeatlas/measurement"
+	"github.com/prometheus/client_golang/prometheus"
 )
+
+const (
+	ns  = "atlas"
+	sub = "ntp"
+)
+
+var (
+	labels             []string
+	pollDesc           *prometheus.Desc
+	precisionDesc      *prometheus.Desc
+	roolDelayDesc      *prometheus.Desc
+	rootDispersionDesc *prometheus.Desc
+	ntpVersionDesc     *prometheus.Desc
+)
+
+func init() {
+	labels = make([]string, 0)
+	labels = append(labels, "measurement", "probe", "dst_addr", "dst_name", "asn", "ip_version")
+
+	pollDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "poll"), "Poll", labels, nil)
+	precisionDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "precision"), "Precision", labels, nil)
+	roolDelayDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "root_delay"), "Root delay", labels, nil)
+	rootDispersionDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "root_dispersion"), "Root dispersion", labels, nil)
+	ntpVersionDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "ntp_version"), "NTP Version", labels, nil)
+}
 
 type NtpMetric struct {
 	ProbeId        int
@@ -24,17 +49,23 @@ func FromResult(r *measurement.Result) *NtpMetric {
 	return &NtpMetric{ProbeId: r.PrbId(), DstAddr: r.DstAddr(), DstName: r.DstName(), Poll: r.Poll(), Precision: r.Precision(), RootDelay: r.RootDelay(), RootDispersion: r.RootDispersion(), Version: r.Version(), IpVersion: r.Af()}
 }
 
-func (m *NtpMetric) Write(w io.Writer, pk string) {
-	m.writeMetric(pk, "poll", m.Poll, w)
-	m.writeMetric(pk, "precision", m.Precision, w)
-	m.writeMetric(pk, "root_delay", m.RootDelay, w)
-	m.writeMetric(pk, "root_dispersion", m.RootDispersion, w)
-	m.writeMetric(pk, "ntp_version", m.Version, w)
+func (m *NtpMetric) GetMetrics(ch chan<- prometheus.Metric, pk string) {
+	labelValues := make([]string, 0)
+	labelValues = append(labelValues, pk, strconv.Itoa(m.ProbeId), m.DstAddr, m.DstName, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion))
+
+	ch <- prometheus.MustNewConstMetric(pollDesc, prometheus.GaugeValue, m.Poll, labelValues...)
+	ch <- prometheus.MustNewConstMetric(precisionDesc, prometheus.GaugeValue, m.Precision, labelValues...)
+	ch <- prometheus.MustNewConstMetric(roolDelayDesc, prometheus.GaugeValue, m.RootDelay, labelValues...)
+	ch <- prometheus.MustNewConstMetric(rootDispersionDesc, prometheus.GaugeValue, m.RootDispersion, labelValues...)
+	ch <- prometheus.MustNewConstMetric(ntpVersionDesc, prometheus.GaugeValue, float64(m.Version), labelValues...)
 }
 
-func (m *NtpMetric) writeMetric(pk string, name string, value interface{}, w io.Writer) {
-	const prefix = "atlas_ntp_"
-	fmt.Fprintf(w, prefix+"%s{measurement=\"%s\",probe=\"%d\",dst_addr=\"%s\",dst_name=\"%s\",asn=\"%d\",ip_version=\"%d\"} %v\n", name, pk, m.ProbeId, m.DstAddr, m.DstName, m.Asn, m.IpVersion, value)
+func (m *NtpMetric) Describe(ch chan<- *prometheus.Desc) {
+	ch <- pollDesc
+	ch <- precisionDesc
+	ch <- roolDelayDesc
+	ch <- rootDispersionDesc
+	ch <- ntpVersionDesc
 }
 
 func (m *NtpMetric) SetAsn(asn int) {

@@ -10,13 +10,14 @@ import (
 	"github.com/DNS-OARC/ripeatlas"
 	"github.com/DNS-OARC/ripeatlas/measurement"
 	"github.com/czerwonk/atlas_exporter/dns"
+	"github.com/czerwonk/atlas_exporter/metric"
 	"github.com/czerwonk/atlas_exporter/ntp"
 	"github.com/czerwonk/atlas_exporter/ping"
 	"github.com/czerwonk/atlas_exporter/probe"
 	"github.com/czerwonk/atlas_exporter/traceroute"
 )
 
-func getMeasurement(id string) ([]Metric, error) {
+func getMeasurement(id string) ([]metric.Metric, error) {
 	a := ripeatlas.Atlaser(ripeatlas.NewHttp())
 	c, err := a.MeasurementLatest(ripeatlas.Params{"pk": id})
 
@@ -24,8 +25,8 @@ func getMeasurement(id string) ([]Metric, error) {
 		return nil, err
 	}
 
-	res := make([]Metric, 0)
-	ch := make(chan Metric)
+	res := make([]metric.Metric, 0)
+	ch := make(chan metric.Metric)
 
 	count := 0
 	for r := range c {
@@ -51,8 +52,8 @@ func getMeasurement(id string) ([]Metric, error) {
 	return res, nil
 }
 
-func convertToMetric(r *measurement.Result, out chan Metric) {
-	var m Metric
+func convertToMetric(r *measurement.Result, out chan metric.Metric) {
+	var m metric.Metric
 
 	if r.Type() == "ping" {
 		m = ping.FromResult(r)
@@ -78,7 +79,7 @@ func convertToMetric(r *measurement.Result, out chan Metric) {
 
 	out <- m
 }
-func setAsnForMetric(r *measurement.Result, m Metric) {
+func setAsnForMetric(r *measurement.Result, m metric.Metric) {
 	p, err := probe.Get(r.PrbId())
 
 	if err != nil {
