@@ -18,16 +18,25 @@ go get github.com/czerwonk/atlas_exporter
 ```
 
 ### Call metrics URI
-for measurement with id 7924888:
+for measurement with id 8772164:
 ```
-curl http://127.0.0.1:9400/metrics?measurement_id=7924888
+curl http://127.0.0.1:9400/metrics?measurement_id=8772164
 ```
 the result should look similar to this one:
-```
-atlas_traceroute_hops{measurement="7924888",probe="15072",asn="20375"} 13
-atlas_traceroute_success{measurement="7924888",probe="15072",asn="20375"} 1
-atlas_traceroute_hops{measurement="7924888",probe="15093",asn="3265"} 8
-atlas_traceroute_success{measurement="7924888",probe="15093",asn="3265"} 1
+``` 
+# HELP atlas_traceroute_hops Number of hops
+# TYPE atlas_traceroute_hops gauge
+atlas_traceroute_hops{asn="1101",dst_addr="8.8.8.8",dst_name="8.8.8.8",ip_version="4",measurement="8772164",probe="6031"} 9
+atlas_traceroute_hops{asn="11051",dst_addr="8.8.8.8",dst_name="8.8.8.8",ip_version="4",measurement="8772164",probe="17833"} 8
+atlas_traceroute_hops{asn="111",dst_addr="8.8.8.8",dst_name="8.8.8.8",ip_version="4",measurement="8772164",probe="6231"} 9
+atlas_traceroute_hops{asn="11427",dst_addr="8.8.8.8",dst_name="8.8.8.8",ip_version="4",measurement="8772164",probe="1121"} 13
+atlas_traceroute_hops{asn="12337",dst_addr="8.8.8.8",dst_name="8.8.8.8",ip_version="4",measurement="8772164",probe="267"} 13
+atlas_traceroute_hops{asn="1257",dst_addr="8.8.8.8",dst_name="8.8.8.8",ip_version="4",measurement="8772164",probe="140"} 11
+atlas_traceroute_hops{asn="12586",dst_addr="8.8.8.8",dst_name="8.8.8.8",ip_version="4",measurement="8772164",probe="2088"} 13
+atlas_traceroute_hops{asn="12597",dst_addr="8.8.8.8",dst_name="8.8.8.8",ip_version="4",measurement="8772164",probe="2619"} 10
+atlas_traceroute_hops{asn="12714",dst_addr="8.8.8.8",dst_name="8.8.8.8",ip_version="4",measurement="8772164",probe="2684"} 9
+atlas_traceroute_hops{asn="133752",dst_addr="8.8.8.8",dst_name="8.8.8.8",ip_version="4",measurement="8772164",probe="6191"} 14
+
 ...
 ```
 
