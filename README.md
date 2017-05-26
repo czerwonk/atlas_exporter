@@ -80,6 +80,9 @@ This software uses components of the following projects
 * Go bindings for RIPE Atlas API (https://github.com/DNS-OARC/ripeatlas)
 * Prometheus Go client library (https://github.com/prometheus/client_golang)
 
+## License
+(c) Daniel Czerwonk, 2017. Licensed under [MIT](LICENSE) license.
+
 ## Prometheus
 see https://prometheus.io/
 
