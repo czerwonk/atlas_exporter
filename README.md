@@ -37,6 +37,30 @@ atlas_traceroute_success{measurement="7924888",probe="15093",asn="3265"} 1
 * ntp
 * dns (succress, rtt)
 
+## Configuration (Prometheus)
+```
+  - job_name: 'atlas_exporter'
+    scrape_interval: 5m
+    static_configs:
+      - targets:
+        - 7924888
+        - 7924886
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: (.*)(:80)?
+        target_label: __param_measurement_id
+        replacement: ${1}
+      - source_labels: [__param_measurement_id]
+        regex: (.*)
+        target_label: instance
+        replacement: ${1}
+      - source_labels: []
+        regex: .*
+        target_label: __address__
+        replacement: atlas-exporter.mytld:9400
+
+```
+
 ## Third Party Components
 This software uses components of the following projects
 * Go bindings for RIPE Atlas API (https://github.com/DNS-OARC/ripeatlas)
