@@ -26,7 +26,7 @@ func init() {
 	rttDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "rtt"), "Roundtrip time in ms", labels, nil)
 }
 
-// Metrics for DNS measurement results
+// DnsMetricExporter exports metrics for DNS measurement results
 type DnsMetricExporter struct {
 	ProbeId   int
 	DstAddr   string
@@ -36,7 +36,7 @@ type DnsMetricExporter struct {
 	IpVersion int
 }
 
-// Creates metric exporter for DNS measurement result
+// FromResult creates metric exporter for DNS measurement result
 func FromResult(r *measurement.Result) *DnsMetricExporter {
 	var rtt float64
 	if r.DnsResult() != nil {
@@ -51,8 +51,8 @@ func FromResult(r *measurement.Result) *DnsMetricExporter {
 	return &DnsMetricExporter{ProbeId: r.PrbId(), DstAddr: r.DstAddr(), Rtt: rtt, Success: success, IpVersion: r.Af()}
 }
 
-// Exports metrics for prometheus
-func (m *DnsMetricExporter) GetMetrics(ch chan<- prometheus.Metric, pk string) {
+// Export exports metrics for prometheus
+func (m *DnsMetricExporter) Export(ch chan<- prometheus.Metric, pk string) {
 	labelValues := make([]string, 0)
 	labelValues = append(labelValues, pk, strconv.Itoa(m.ProbeId), m.DstAddr, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion))
 
@@ -64,18 +64,18 @@ func (m *DnsMetricExporter) GetMetrics(ch chan<- prometheus.Metric, pk string) {
 	}
 }
 
-// Exports metric descriptions for prometheus
+// Describe exports metric descriptions for prometheus
 func (m *DnsMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- successDesc
 	ch <- rttDesc
 }
 
-// Sets AS number for measurement result
+// SetAsn sets AS number for measurement result
 func (m *DnsMetricExporter) SetAsn(asn int) {
 	m.Asn = asn
 }
 
-// Gets whether an result is valid (e.g. IPv6 measurement and Probe does not support IPv6)
+// IsValid returns whether an result is valid or not (e.g. IPv6 measurement and Probe does not support IPv6)
 func (m *DnsMetricExporter) Isvalid() bool {
 	return m.Asn > 0
 }

@@ -25,7 +25,7 @@ var (
 	sizeDesc       *prometheus.Desc
 )
 
-// Metrics for PING measurement results
+// PingMetricExporter exports metrics for PING measurement results
 type PingMetricExporter struct {
 	ProbeId   int
 	DstAddr   string
@@ -57,13 +57,13 @@ func init() {
 	sizeDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "size"), "Size of ICMP packet", labels, nil)
 }
 
-// Creates metric exporter for PING measurement result
+// FromResult creates  metric exporter for PING measurement result
 func FromResult(r *measurement.Result) *PingMetricExporter {
 	return &PingMetricExporter{ProbeId: r.PrbId(), DstAddr: r.DstAddr(), DstName: r.DstName(), Max: r.Max(), Min: r.Min(), Rcvd: r.Rcvd(), Avg: r.Avg(), Sent: r.Sent(), Dup: r.Dup(), Ttl: r.Ttl(), Size: r.Size(), IpVersion: r.Af()}
 }
 
-// Exports metrics for prometheus
-func (m *PingMetricExporter) GetMetrics(ch chan<- prometheus.Metric, pk string) {
+// Export exports metrics for prometheus
+func (m *PingMetricExporter) Export(ch chan<- prometheus.Metric, pk string) {
 	labelValues := make([]string, 0)
 	labelValues = append(labelValues, pk, strconv.Itoa(m.ProbeId), m.DstAddr, m.DstName, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion))
 
@@ -83,7 +83,7 @@ func (m *PingMetricExporter) GetMetrics(ch chan<- prometheus.Metric, pk string) 
 	ch <- prometheus.MustNewConstMetric(sizeDesc, prometheus.GaugeValue, float64(m.Size), labelValues...)
 }
 
-// Exports metric descriptions for prometheus
+// Describe exports metric descriptions for prometheus
 func (m *PingMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- successDesc
 	ch <- minLatencyDesc
@@ -96,12 +96,12 @@ func (m *PingMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- sizeDesc
 }
 
-// Sets AS number for measurement result
+// SetAsn sets AS number for measurement result
 func (m *PingMetricExporter) SetAsn(asn int) {
 	m.Asn = asn
 }
 
-// Gets whether an result is valid (e.g. IPv6 measurement and Probe does not support IPv6)
+// IsValid returns whether an result is valid or not (e.g. IPv6 measurement and Probe does not support IPv6)
 func (m *PingMetricExporter) Isvalid() bool {
 	return m.Asn > 0
 }

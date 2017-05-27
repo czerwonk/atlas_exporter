@@ -4,17 +4,18 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-// Metric exporter for measurement result (single probe)
+// MetricExporter exports metrics for Atlas measurement results
 type MetricExporter interface {
-	// Exports metrics for prometheus
-	GetMetrics(ch chan<- prometheus.Metric, pk string)
 
-	// Exports metric descriptions for prometheus
+	// Export exports metrics for prometheus
+	Export(ch chan<- prometheus.Metric, pk string)
+
+	// Describe exports metric descriptions for prometheus
 	Describe(ch chan<- *prometheus.Desc)
 
-	// Sets AN number for measurement result
+	// SetAsn sets AS number for measurement result
 	SetAsn(asn int)
 
-	// Gets whether an result is valid (e.g. IPv6 measurement and Probe does not support IPv6)
+	// IsValid returns whether an result is valid or not (e.g. IPv6 measurement and Probe does not support IPv6)
 	Isvalid() bool
 }

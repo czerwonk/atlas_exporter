@@ -32,7 +32,7 @@ func init() {
 	ntpVersionDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "ntp_version"), "NTP Version", labels, nil)
 }
 
-// Metrics for NTP measurement results
+// NtpMetricExporter exports metrics for NTP measurement results
 type NtpMetricExporter struct {
 	ProbeId        int
 	DstAddr        string
@@ -46,13 +46,13 @@ type NtpMetricExporter struct {
 	IpVersion      int
 }
 
-// Creates metric exporter for NTP measurement result
+// FromResult creates  metric exporter for NTP measurement result
 func FromResult(r *measurement.Result) *NtpMetricExporter {
 	return &NtpMetricExporter{ProbeId: r.PrbId(), DstAddr: r.DstAddr(), DstName: r.DstName(), Poll: r.Poll(), Precision: r.Precision(), RootDelay: r.RootDelay(), RootDispersion: r.RootDispersion(), Version: r.Version(), IpVersion: r.Af()}
 }
 
-// Exports metrics for prometheus
-func (m *NtpMetricExporter) GetMetrics(ch chan<- prometheus.Metric, pk string) {
+// Export exports metrics for prometheus
+func (m *NtpMetricExporter) Export(ch chan<- prometheus.Metric, pk string) {
 	labelValues := make([]string, 0)
 	labelValues = append(labelValues, pk, strconv.Itoa(m.ProbeId), m.DstAddr, m.DstName, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion))
 
@@ -63,7 +63,7 @@ func (m *NtpMetricExporter) GetMetrics(ch chan<- prometheus.Metric, pk string) {
 	ch <- prometheus.MustNewConstMetric(ntpVersionDesc, prometheus.GaugeValue, float64(m.Version), labelValues...)
 }
 
-// Exports metric descriptions for prometheus
+// Describe exports metric descriptions for prometheus
 func (m *NtpMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- pollDesc
 	ch <- precisionDesc
@@ -72,12 +72,12 @@ func (m *NtpMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- ntpVersionDesc
 }
 
-// Sets AS number for measurement result
+// SetAsn sets AS number for measurement result
 func (m *NtpMetricExporter) SetAsn(asn int) {
 	m.Asn = asn
 }
 
-// Gets whether an result is valid (e.g. IPv6 measurement and Probe does not support IPv6)
+// IsValid returns whether an result is valid or not (e.g. IPv6 measurement and Probe does not support IPv6)
 func (m *NtpMetricExporter) Isvalid() bool {
 	return m.Asn > 0
 }

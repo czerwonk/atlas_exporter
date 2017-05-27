@@ -24,7 +24,8 @@ var (
 
 func init() {
 	flag.Usage = func() {
-		fmt.Println("Usage: atlas_exporter [ ... ]\n\nParameters:\n")
+		fmt.Println("Usage: atlas_exporter [ ... ]\n\nParameters:")
+		fmt.Println()
 		flag.PrintDefaults()
 	}
 }
