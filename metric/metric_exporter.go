@@ -17,5 +17,5 @@ type MetricExporter interface {
 	SetAsn(asn int)
 
 	// IsValid returns whether an result is valid or not (e.g. IPv6 measurement and Probe does not support IPv6)
-	Isvalid() bool
+	IsValid() bool
 }

@@ -76,6 +76,6 @@ func (m *DnsMetricExporter) SetAsn(asn int) {
 }
 
 // IsValid returns whether an result is valid or not (e.g. IPv6 measurement and Probe does not support IPv6)
-func (m *DnsMetricExporter) Isvalid() bool {
+func (m *DnsMetricExporter) IsValid() bool {
 	return m.Asn > 0
 }

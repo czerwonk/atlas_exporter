@@ -102,6 +102,6 @@ func (m *PingMetricExporter) SetAsn(asn int) {
 }
 
 // IsValid returns whether an result is valid or not (e.g. IPv6 measurement and Probe does not support IPv6)
-func (m *PingMetricExporter) Isvalid() bool {
+func (m *PingMetricExporter) IsValid() bool {
 	return m.Asn > 0
 }

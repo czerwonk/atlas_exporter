@@ -78,6 +78,6 @@ func (m *NtpMetricExporter) SetAsn(asn int) {
 }
 
 // IsValid returns whether an result is valid or not (e.g. IPv6 measurement and Probe does not support IPv6)
-func (m *NtpMetricExporter) Isvalid() bool {
+func (m *NtpMetricExporter) IsValid() bool {
 	return m.Asn > 0
 }

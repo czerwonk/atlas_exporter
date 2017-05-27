@@ -88,6 +88,6 @@ func (m *TracerouteMetricExporter) SetAsn(asn int) {
 }
 
 // IsValid returns whether an result is valid or not (e.g. IPv6 measurement and Probe does not support IPv6)
-func (m *TracerouteMetricExporter) Isvalid() bool {
+func (m *TracerouteMetricExporter) IsValid() bool {
 	return (m.Success == 1 || m.HopCount > 1) && m.Asn > 0
 }
