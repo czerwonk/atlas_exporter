@@ -28,7 +28,7 @@ func init() {
 	rttDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "rtt"), "Round trip time in ms", labels, nil)
 }
 
-type TracerouteMetric struct {
+type TracerouteMetricExporter struct {
 	ProbeId   int
 	DstAddr   string
 	DstName   string
@@ -39,14 +39,15 @@ type TracerouteMetric struct {
 	IpVersion int
 }
 
-func FromResult(r *measurement.Result) *TracerouteMetric {
-	m := &TracerouteMetric{ProbeId: r.PrbId(), DstAddr: r.DstAddr(), DstName: r.DstName(), HopCount: len(r.TracerouteResults()), IpVersion: r.Af()}
+// Creates metric exporter for traceroute measurement result
+func FromResult(r *measurement.Result) *TracerouteMetricExporter {
+	m := &TracerouteMetricExporter{ProbeId: r.PrbId(), DstAddr: r.DstAddr(), DstName: r.DstName(), HopCount: len(r.TracerouteResults()), IpVersion: r.Af()}
 	processLastHop(r, m)
 
 	return m
 }
 
-func processLastHop(r *measurement.Result, m *TracerouteMetric) {
+func processLastHop(r *measurement.Result, m *TracerouteMetricExporter) {
 	if len(r.TracerouteResults()) == 0 {
 		return
 	}
@@ -60,7 +61,8 @@ func processLastHop(r *measurement.Result, m *TracerouteMetric) {
 	}
 }
 
-func (m *TracerouteMetric) GetMetrics(ch chan<- prometheus.Metric, pk string) {
+// Exports metrics for prometheus
+func (m *TracerouteMetricExporter) GetMetrics(ch chan<- prometheus.Metric, pk string) {
 	labelValues := make([]string, 0)
 	labelValues = append(labelValues, pk, strconv.Itoa(m.ProbeId), m.DstAddr, m.DstName, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion))
 
@@ -72,16 +74,19 @@ func (m *TracerouteMetric) GetMetrics(ch chan<- prometheus.Metric, pk string) {
 	}
 }
 
-func (m *TracerouteMetric) Describe(ch chan<- *prometheus.Desc) {
+// Exports metric descriptions for prometheus
+func (m *TracerouteMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- successDesc
 	ch <- hopDesc
 	ch <- rttDesc
 }
 
-func (m *TracerouteMetric) SetAsn(asn int) {
+// Sets AN number for measurement result
+func (m *TracerouteMetricExporter) SetAsn(asn int) {
 	m.Asn = asn
 }
 
-func (m *TracerouteMetric) Isvalid() bool {
+// Gets whether an result is valid (e.g. IPv6 measurement and Probe does not support IPv6)
+func (m *TracerouteMetricExporter) Isvalid() bool {
 	return (m.Success == 1 || m.HopCount > 1) && m.Asn > 0
 }

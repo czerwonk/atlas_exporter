@@ -32,7 +32,8 @@ func init() {
 	ntpVersionDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "ntp_version"), "NTP Version", labels, nil)
 }
 
-type NtpMetric struct {
+// Metrics for NTP measurement results
+type NtpMetricExporter struct {
 	ProbeId        int
 	DstAddr        string
 	DstName        string
@@ -45,11 +46,13 @@ type NtpMetric struct {
 	IpVersion      int
 }
 
-func FromResult(r *measurement.Result) *NtpMetric {
-	return &NtpMetric{ProbeId: r.PrbId(), DstAddr: r.DstAddr(), DstName: r.DstName(), Poll: r.Poll(), Precision: r.Precision(), RootDelay: r.RootDelay(), RootDispersion: r.RootDispersion(), Version: r.Version(), IpVersion: r.Af()}
+// Creates metric exporter for NTP measurement result
+func FromResult(r *measurement.Result) *NtpMetricExporter {
+	return &NtpMetricExporter{ProbeId: r.PrbId(), DstAddr: r.DstAddr(), DstName: r.DstName(), Poll: r.Poll(), Precision: r.Precision(), RootDelay: r.RootDelay(), RootDispersion: r.RootDispersion(), Version: r.Version(), IpVersion: r.Af()}
 }
 
-func (m *NtpMetric) GetMetrics(ch chan<- prometheus.Metric, pk string) {
+// Exports metrics for prometheus
+func (m *NtpMetricExporter) GetMetrics(ch chan<- prometheus.Metric, pk string) {
 	labelValues := make([]string, 0)
 	labelValues = append(labelValues, pk, strconv.Itoa(m.ProbeId), m.DstAddr, m.DstName, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion))
 
@@ -60,7 +63,8 @@ func (m *NtpMetric) GetMetrics(ch chan<- prometheus.Metric, pk string) {
 	ch <- prometheus.MustNewConstMetric(ntpVersionDesc, prometheus.GaugeValue, float64(m.Version), labelValues...)
 }
 
-func (m *NtpMetric) Describe(ch chan<- *prometheus.Desc) {
+// Exports metric descriptions for prometheus
+func (m *NtpMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- pollDesc
 	ch <- precisionDesc
 	ch <- roolDelayDesc
@@ -68,10 +72,12 @@ func (m *NtpMetric) Describe(ch chan<- *prometheus.Desc) {
 	ch <- ntpVersionDesc
 }
 
-func (m *NtpMetric) SetAsn(asn int) {
+// Sets AS number for measurement result
+func (m *NtpMetricExporter) SetAsn(asn int) {
 	m.Asn = asn
 }
 
-func (m *NtpMetric) Isvalid() bool {
+// Gets whether an result is valid (e.g. IPv6 measurement and Probe does not support IPv6)
+func (m *NtpMetricExporter) Isvalid() bool {
 	return m.Asn > 0
 }

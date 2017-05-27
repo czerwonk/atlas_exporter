@@ -25,7 +25,8 @@ var (
 	sizeDesc       *prometheus.Desc
 )
 
-type PingMetric struct {
+// Metrics for PING measurement results
+type PingMetricExporter struct {
 	ProbeId   int
 	DstAddr   string
 	DstName   string
@@ -46,7 +47,7 @@ func init() {
 	labels = append(labels, "measurement", "probe", "dst_addr", "dst_name", "asn", "ip_version")
 
 	successDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "success"), "Destination was reachable", labels, nil)
-	minLatencyDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "min_latency"), "Minumum latency", labels, nil)
+	minLatencyDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "min_latency"), "Minimum latency", labels, nil)
 	maxLatencyDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "max_latency"), "Maximum latency", labels, nil)
 	avgLatencyDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "avg_latency"), "Average latency", labels, nil)
 	sentDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "sent"), "Number of sent icmp requests", labels, nil)
@@ -56,11 +57,13 @@ func init() {
 	sizeDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "size"), "Size of ICMP packet", labels, nil)
 }
 
-func FromResult(r *measurement.Result) *PingMetric {
-	return &PingMetric{ProbeId: r.PrbId(), DstAddr: r.DstAddr(), DstName: r.DstName(), Max: r.Max(), Min: r.Min(), Rcvd: r.Rcvd(), Avg: r.Avg(), Sent: r.Sent(), Dup: r.Dup(), Ttl: r.Ttl(), Size: r.Size(), IpVersion: r.Af()}
+// Creates metric exporter for PING measurement result
+func FromResult(r *measurement.Result) *PingMetricExporter {
+	return &PingMetricExporter{ProbeId: r.PrbId(), DstAddr: r.DstAddr(), DstName: r.DstName(), Max: r.Max(), Min: r.Min(), Rcvd: r.Rcvd(), Avg: r.Avg(), Sent: r.Sent(), Dup: r.Dup(), Ttl: r.Ttl(), Size: r.Size(), IpVersion: r.Af()}
 }
 
-func (m *PingMetric) GetMetrics(ch chan<- prometheus.Metric, pk string) {
+// Exports metrics for prometheus
+func (m *PingMetricExporter) GetMetrics(ch chan<- prometheus.Metric, pk string) {
 	labelValues := make([]string, 0)
 	labelValues = append(labelValues, pk, strconv.Itoa(m.ProbeId), m.DstAddr, m.DstName, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion))
 
@@ -80,7 +83,8 @@ func (m *PingMetric) GetMetrics(ch chan<- prometheus.Metric, pk string) {
 	ch <- prometheus.MustNewConstMetric(sizeDesc, prometheus.GaugeValue, float64(m.Size), labelValues...)
 }
 
-func (m *PingMetric) Describe(ch chan<- *prometheus.Desc) {
+// Exports metric descriptions for prometheus
+func (m *PingMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- successDesc
 	ch <- minLatencyDesc
 	ch <- maxLatencyDesc
@@ -92,10 +96,12 @@ func (m *PingMetric) Describe(ch chan<- *prometheus.Desc) {
 	ch <- sizeDesc
 }
 
-func (m *PingMetric) SetAsn(asn int) {
+// Sets AS number for measurement result
+func (m *PingMetricExporter) SetAsn(asn int) {
 	m.Asn = asn
 }
 
-func (m *PingMetric) Isvalid() bool {
+// Gets whether an result is valid (e.g. IPv6 measurement and Probe does not support IPv6)
+func (m *PingMetricExporter) Isvalid() bool {
 	return m.Asn > 0
 }

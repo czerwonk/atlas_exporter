@@ -71,7 +71,7 @@ func handleMetricsRequest(w http.ResponseWriter, r *http.Request) error {
 	id := r.URL.Query().Get("measurement_id")
 
 	if len(id) == 0 {
-		return errors.New("Parameter measurement_id has to be defined.")
+		return errors.New("Parameter measurement_id has to be defined")
 	}
 
 	metrics, err := getMeasurement(id)

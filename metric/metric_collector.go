@@ -6,10 +6,10 @@ import (
 
 type MetricCollector struct {
 	Pk      string
-	Metrics []Metric
+	Metrics []MetricExporter
 }
 
-func NewMetricCollector(pk string, metrics []Metric) prometheus.Collector {
+func NewMetricCollector(pk string, metrics []MetricExporter) prometheus.Collector {
 	return &MetricCollector{Pk: pk, Metrics: metrics}
 }
 
