@@ -10,6 +10,7 @@ import (
 	"github.com/DNS-OARC/ripeatlas"
 	"github.com/DNS-OARC/ripeatlas/measurement"
 	"github.com/czerwonk/atlas_exporter/dns"
+	"github.com/czerwonk/atlas_exporter/http"
 	"github.com/czerwonk/atlas_exporter/metric"
 	"github.com/czerwonk/atlas_exporter/ntp"
 	"github.com/czerwonk/atlas_exporter/ping"
@@ -55,26 +56,23 @@ func getMeasurement(id string) ([]metric.MetricExporter, error) {
 func getMetricExporter(r *measurement.Result, out chan metric.MetricExporter) {
 	var m metric.MetricExporter
 
-	if r.Type() == "ping" {
+	switch r.Type() {
+	case "ping":
 		m = ping.FromResult(r)
-	}
-
-	if r.Type() == "traceroute" {
+	case "traceroute":
 		m = traceroute.FromResult(r)
-	}
-
-	if r.Type() == "ntp" {
+	case "ntp":
 		m = ntp.FromResult(r)
-	}
-
-	if r.Type() == "dns" {
+	case "dns":
 		m = dns.FromResult(r)
+	case "http":
+		m = http.FromResult(r)
+	default:
+		log.Printf("Type %s is not yet supported\n", r.Type())
 	}
 
 	if m != nil {
 		setAsnForMetricExporter(r, m)
-	} else {
-		log.Printf("Type %s is not yet supported\n", r.Type())
 	}
 
 	out <- m
