@@ -1,7 +1,7 @@
 # atlas_exporter 
 [![Build Status](https://travis-ci.org/czerwonk/atlas_exporter.svg)][travis]
-[![Docker Build Statu](https://img.shields.io/docker/build/czerwonk/atlas_exporter.svg)]()
-[![Go Report Card](https://goreportcard.com/badge/github.com/czerwonk/atlas_exporter)]()
+[![Docker Build Statu](https://img.shields.io/docker/build/czerwonk/atlas_exporter.svg)][dockerbuild]
+[![Go Report Card](https://goreportcard.com/badge/github.com/czerwonk/atlas_exporter)][goreportcard]
 
 Metric exporter for RIPE Atlas measurement results
 
@@ -94,3 +94,5 @@ see https://prometheus.io/
 see http://atlas.ripe.net
 
 [travis]: https://travis-ci.org/czerwonk/atlas_exporter
+[dockerbuild]: https://hub.docker.com/r/czerwonk/atlas_exporter/builds
+[goreportcard]: https://goreportcard.com/report/github.com/czerwonk/atlas_exporter
