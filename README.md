@@ -1,6 +1,7 @@
 # atlas_exporter 
 [![Build Status](https://travis-ci.org/czerwonk/atlas_exporter.svg)][travis]
 [![Docker Build Statu](https://img.shields.io/docker/build/czerwonk/atlas_exporter.svg)]()
+[![Go Report Card](https://goreportcard.com/badge/github.com/czerwonk/atlas_exporter)][goreportcard]
 
 Metric exporter for RIPE Atlas measurement results
 
