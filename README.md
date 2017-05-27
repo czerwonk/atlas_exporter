@@ -1,5 +1,5 @@
 # atlas_exporter [![Build Status](https://travis-ci.org/czerwonk/atlas_exporter.svg)][travis]
-Metric exporter for RIPE atlas measurement results
+Metric exporter for RIPE Atlas measurement results
 
 ## Remarks
 * this is an early version, more features will be added step by step
