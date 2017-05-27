@@ -55,6 +55,7 @@ atlas_traceroute_hops{asn="133752",dst_addr="8.8.8.8",dst_name="8.8.8.8",ip_vers
 * ntp (delay, derivation, ntp version)
 * dns (succress, rtt)
 * http (return code, rtt, http version, header size, body size)  
+* sslcert (alert, rtt)
 
 ## Configuration (Prometheus)
 ```
