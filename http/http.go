@@ -89,11 +89,11 @@ func (m *HttpMetricExporter) Export(ch chan<- prometheus.Metric, pk string) {
 	ch <- prometheus.MustNewConstMetric(httpVerDesc, prometheus.GaugeValue, m.HttpVersion, labelValues...)
 	ch <- prometheus.MustNewConstMetric(bodySizeDesc, prometheus.GaugeValue, float64(m.BodySize), labelValues...)
 	ch <- prometheus.MustNewConstMetric(headerSizeDesc, prometheus.GaugeValue, float64(m.HeaderSize), labelValues...)
-	ch <- prometheus.MustNewConstMetric(rttDesc, prometheus.GaugeValue, m.Rtt, labelValues...)
 	ch <- prometheus.MustNewConstMetric(dnsErrDesc, prometheus.GaugeValue, float64(m.DnsError), labelValues...)
 
 	if m.Rtt > 0 {
 		ch <- prometheus.MustNewConstMetric(successDesc, prometheus.GaugeValue, 1, labelValues...)
+		ch <- prometheus.MustNewConstMetric(rttDesc, prometheus.GaugeValue, m.Rtt, labelValues...)
 	} else {
 		ch <- prometheus.MustNewConstMetric(successDesc, prometheus.GaugeValue, 0, labelValues...)
 	}

@@ -15,6 +15,7 @@ import (
 	"github.com/czerwonk/atlas_exporter/ntp"
 	"github.com/czerwonk/atlas_exporter/ping"
 	"github.com/czerwonk/atlas_exporter/probe"
+	"github.com/czerwonk/atlas_exporter/sslcert"
 	"github.com/czerwonk/atlas_exporter/traceroute"
 )
 
@@ -67,6 +68,8 @@ func getMetricExporter(r *measurement.Result, out chan metric.MetricExporter) {
 		m = dns.FromResult(r)
 	case "http":
 		m = http.FromResult(r)
+	case "sslcert":
+		m = sslcert.FromResult(r)
 	default:
 		log.Printf("Type %s is not yet supported\n", r.Type())
 	}
