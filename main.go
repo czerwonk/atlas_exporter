@@ -4,13 +4,13 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
 	"github.com/czerwonk/atlas_exporter/metric"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/log"
 )
 
 const version string = "0.4.0"
@@ -62,7 +62,7 @@ func errorHandler(f func(http.ResponseWriter, *http.Request) error) http.Handler
 		err := f(w, r)
 
 		if err != nil {
-			log.Println(err)
+			log.Errorln(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
@@ -85,7 +85,9 @@ func handleMetricsRequest(w http.ResponseWriter, r *http.Request) error {
 		reg := prometheus.NewRegistry()
 		reg.MustRegister(metric.NewMetricCollector(id, metrics))
 
-		promhttp.HandlerFor(reg, promhttp.HandlerOpts{}).ServeHTTP(w, r)
+		promhttp.HandlerFor(reg, promhttp.HandlerOpts{
+			ErrorLog:      log.NewErrorLogger(),
+			ErrorHandling: promhttp.ContinueOnError}).ServeHTTP(w, r)
 	}
 
 	return nil
