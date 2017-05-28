@@ -7,19 +7,23 @@ import (
 	"net/http"
 	"os"
 
+	"time"
+
 	"github.com/czerwonk/atlas_exporter/metric"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/log"
 )
 
-const version string = "0.4.0"
+const version string = "0.5.0"
 
 var (
 	showVersion          = flag.Bool("version", false, "Print version information.")
 	listenAddress        = flag.String("web.listen-address", ":9400", "Address on which to expose metrics and web interface.")
 	metricsPath          = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
 	filterInvalidResults = flag.Bool("filter.invalid-results", true, "Exclude offline/incompatible probes")
+	cacheTtl             = flag.Int("cache.ttl", 3600, "Cache time to live in seconds")
+	cacheCleanUp         = flag.Int("cache.cleanup", 300, "Interval for cache clean up in seconds")
 )
 
 func init() {
@@ -50,10 +54,14 @@ func printVersion() {
 }
 
 func startServer() {
-	fmt.Printf("Starting atlas exporter (Version: %s)\n", version)
+	log.Infof("Starting atlas exporter (Version: %s)\n", version)
 	http.HandleFunc(*metricsPath, errorHandler(handleMetricsRequest))
 
-	fmt.Printf("Listening for %s on %s\n", *metricsPath, *listenAddress)
+	log.Infof("Cache TTL: %v\n", time.Duration(*cacheTtl)*time.Second)
+	log.Infof("Cache cleanup interval (seconds): %v\n", time.Duration(*cacheCleanUp)*time.Second)
+	initCache()
+
+	log.Infof("Listening for %s on %s\n", *metricsPath, *listenAddress)
 	log.Fatal(http.ListenAndServe(*listenAddress, nil))
 }
 

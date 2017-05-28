@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"errors"
 	"fmt"
 	"time"
@@ -17,7 +15,28 @@ import (
 	"github.com/czerwonk/atlas_exporter/probe"
 	"github.com/czerwonk/atlas_exporter/sslcert"
 	"github.com/czerwonk/atlas_exporter/traceroute"
+	"github.com/prometheus/common/log"
 )
+
+var cache *probe.ProbeCache
+
+func initCache() {
+	cache = probe.NewCache(time.Duration(*cacheTtl) * time.Second)
+	startCacheCleanupFunc(time.Duration(*cacheCleanUp) * time.Second)
+}
+
+func startCacheCleanupFunc(d time.Duration) {
+	go func() {
+		for {
+			select {
+			case <-time.After(d):
+				log.Infoln("Cleaning up cache...")
+				r := cache.CleanUp()
+				log.Infof("Items removed: %d", r)
+			}
+		}
+	}()
+}
 
 func getMeasurement(id string) ([]metric.MetricExporter, error) {
 	a := ripeatlas.Atlaser(ripeatlas.NewHttp())
@@ -71,7 +90,7 @@ func getMetricExporter(r *measurement.Result, out chan metric.MetricExporter) {
 	case "sslcert":
 		m = sslcert.FromResult(r)
 	default:
-		log.Printf("Type %s is not yet supported\n", r.Type())
+		log.Errorf("Type %s is not yet supported\n", r.Type())
 	}
 
 	if m != nil {
@@ -81,11 +100,18 @@ func getMetricExporter(r *measurement.Result, out chan metric.MetricExporter) {
 	out <- m
 }
 func setAsnForMetricExporter(r *measurement.Result, m metric.MetricExporter) {
-	p, err := probe.Get(r.PrbId())
+	p, found := cache.Get(r.PrbId())
 
-	if err != nil {
-		log.Printf("Could not get information for probe %d: %v\n", r.PrbId(), err)
-		return
+	if !found {
+		var err error
+		p, err = probe.Get(r.PrbId())
+
+		if err != nil {
+			log.Errorf("Could not get information for probe %d: %v\n", r.PrbId(), err)
+			return
+		}
+
+		cache.Add(r.PrbId(), p)
 	}
 
 	if r.Af() == 4 {
