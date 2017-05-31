@@ -25,8 +25,7 @@ var (
 )
 
 func init() {
-	labels = make([]string, 0)
-	labels = append(labels, "measurement", "probe", "dst_addr", "asn", "ip_version", "uri", "method")
+	labels = []string{"measurement", "probe", "dst_addr", "asn", "ip_version", "uri", "method"}
 
 	successDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "success"), "Destination was reachable", labels, nil)
 	resultDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "result"), "Code returned from http server", labels, nil)
@@ -80,10 +79,9 @@ func (m *HttpMetricExporter) fillFromHttpResult(h *http.Result) {
 	}
 }
 
-// Export exports metrics for prometheus
+// Export exports metrics for Prometheus
 func (m *HttpMetricExporter) Export(ch chan<- prometheus.Metric, pk string) {
-	labelValues := make([]string, 0)
-	labelValues = append(labelValues, pk, strconv.Itoa(m.ProbeId), m.DstAddr, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion), m.Uri, m.Method)
+	labelValues := []string{pk, strconv.Itoa(m.ProbeId), m.DstAddr, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion), m.Uri, m.Method}
 
 	ch <- prometheus.MustNewConstMetric(resultDesc, prometheus.GaugeValue, float64(m.ReturnCode), labelValues...)
 	ch <- prometheus.MustNewConstMetric(httpVerDesc, prometheus.GaugeValue, m.HttpVersion, labelValues...)
@@ -99,7 +97,7 @@ func (m *HttpMetricExporter) Export(ch chan<- prometheus.Metric, pk string) {
 	}
 }
 
-// Describe exports metric descriptions for prometheus
+// Describe exports metric descriptions for Prometheus
 func (m *HttpMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- successDesc
 	ch <- resultDesc

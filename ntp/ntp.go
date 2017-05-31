@@ -22,8 +22,7 @@ var (
 )
 
 func init() {
-	labels = make([]string, 0)
-	labels = append(labels, "measurement", "probe", "dst_addr", "dst_name", "asn", "ip_version")
+	labels = []string{"measurement", "probe", "dst_addr", "dst_name", "asn", "ip_version"}
 
 	pollDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "poll"), "Poll", labels, nil)
 	precisionDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "precision"), "Precision", labels, nil)
@@ -51,10 +50,9 @@ func FromResult(r *measurement.Result) *NtpMetricExporter {
 	return &NtpMetricExporter{ProbeId: r.PrbId(), DstAddr: r.DstAddr(), DstName: r.DstName(), Poll: r.Poll(), Precision: r.Precision(), RootDelay: r.RootDelay(), RootDispersion: r.RootDispersion(), Version: r.Version(), IpVersion: r.Af()}
 }
 
-// Export exports metrics for prometheus
+// Export exports metrics for Prometheus
 func (m *NtpMetricExporter) Export(ch chan<- prometheus.Metric, pk string) {
-	labelValues := make([]string, 0)
-	labelValues = append(labelValues, pk, strconv.Itoa(m.ProbeId), m.DstAddr, m.DstName, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion))
+	labelValues := []string{pk, strconv.Itoa(m.ProbeId), m.DstAddr, m.DstName, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion)}
 
 	ch <- prometheus.MustNewConstMetric(pollDesc, prometheus.GaugeValue, m.Poll, labelValues...)
 	ch <- prometheus.MustNewConstMetric(precisionDesc, prometheus.GaugeValue, m.Precision, labelValues...)
@@ -63,7 +61,7 @@ func (m *NtpMetricExporter) Export(ch chan<- prometheus.Metric, pk string) {
 	ch <- prometheus.MustNewConstMetric(ntpVersionDesc, prometheus.GaugeValue, float64(m.Version), labelValues...)
 }
 
-// Describe exports metric descriptions for prometheus
+// Describe exports metric descriptions for Prometheus
 func (m *NtpMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- pollDesc
 	ch <- precisionDesc

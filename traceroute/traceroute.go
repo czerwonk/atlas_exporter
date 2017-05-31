@@ -20,8 +20,7 @@ var (
 )
 
 func init() {
-	labels = make([]string, 0)
-	labels = append(labels, "measurement", "probe", "dst_addr", "dst_name", "asn", "ip_version")
+	labels = []string{"measurement", "probe", "dst_addr", "dst_name", "asn", "ip_version"}
 
 	successDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "success"), "Destination was reachable", labels, nil)
 	hopDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "hops"), "Number of hops", labels, nil)
@@ -62,10 +61,9 @@ func processLastHop(r *measurement.Result, m *TracerouteMetricExporter) {
 	}
 }
 
-// Export exports metrics for prometheus
+// Export exports metrics for Prometheus
 func (m *TracerouteMetricExporter) Export(ch chan<- prometheus.Metric, pk string) {
-	labelValues := make([]string, 0)
-	labelValues = append(labelValues, pk, strconv.Itoa(m.ProbeId), m.DstAddr, m.DstName, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion))
+	labelValues := []string{pk, strconv.Itoa(m.ProbeId), m.DstAddr, m.DstName, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion)}
 
 	ch <- prometheus.MustNewConstMetric(successDesc, prometheus.GaugeValue, float64(m.Success), labelValues...)
 	ch <- prometheus.MustNewConstMetric(hopDesc, prometheus.GaugeValue, float64(m.HopCount), labelValues...)
@@ -75,7 +73,7 @@ func (m *TracerouteMetricExporter) Export(ch chan<- prometheus.Metric, pk string
 	}
 }
 
-// Describe exports metric descriptions for prometheus
+// Describe exports metric descriptions for Prometheus
 func (m *TracerouteMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- successDesc
 	ch <- hopDesc

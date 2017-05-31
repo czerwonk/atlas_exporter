@@ -22,8 +22,7 @@ var (
 )
 
 func init() {
-	labels = make([]string, 0)
-	labels = append(labels, "measurement", "probe", "dst_addr", "asn", "ip_version")
+	labels = []string{"measurement", "probe", "dst_addr", "asn", "ip_version"}
 
 	successDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "success"), "Destination was reachable", labels, nil)
 	sslVerDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "version"), "SSL/TLS version used for the request", labels, nil)
@@ -57,10 +56,9 @@ func FromResult(r *measurement.Result) *SslCertMetricExporter {
 	return m
 }
 
-// Export exports metrics for prometheus
+// Export exports metrics for Prometheus
 func (m *SslCertMetricExporter) Export(ch chan<- prometheus.Metric, pk string) {
-	labelValues := make([]string, 0)
-	labelValues = append(labelValues, pk, strconv.Itoa(m.ProbeId), m.DstAddr, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion))
+	labelValues := []string{pk, strconv.Itoa(m.ProbeId), m.DstAddr, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion)}
 
 	ch <- prometheus.MustNewConstMetric(sslVerDesc, prometheus.GaugeValue, m.SslVersion, labelValues...)
 	ch <- prometheus.MustNewConstMetric(alertLevelDesc, prometheus.GaugeValue, float64(m.AlertLevel), labelValues...)
@@ -74,7 +72,7 @@ func (m *SslCertMetricExporter) Export(ch chan<- prometheus.Metric, pk string) {
 	}
 }
 
-// Describe exports metric descriptions for prometheus
+// Describe exports metric descriptions for Prometheus
 func (m *SslCertMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- successDesc
 	ch <- rttDesc

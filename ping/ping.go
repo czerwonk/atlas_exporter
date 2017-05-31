@@ -43,8 +43,7 @@ type PingMetricExporter struct {
 }
 
 func init() {
-	labels = make([]string, 0)
-	labels = append(labels, "measurement", "probe", "dst_addr", "dst_name", "asn", "ip_version")
+	labels = []string{"measurement", "probe", "dst_addr", "dst_name", "asn", "ip_version"}
 
 	successDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "success"), "Destination was reachable", labels, nil)
 	minLatencyDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "min_latency"), "Minimum latency", labels, nil)
@@ -62,10 +61,9 @@ func FromResult(r *measurement.Result) *PingMetricExporter {
 	return &PingMetricExporter{ProbeId: r.PrbId(), DstAddr: r.DstAddr(), DstName: r.DstName(), Max: r.Max(), Min: r.Min(), Rcvd: r.Rcvd(), Avg: r.Avg(), Sent: r.Sent(), Dup: r.Dup(), Ttl: r.Ttl(), Size: r.Size(), IpVersion: r.Af()}
 }
 
-// Export exports metrics for prometheus
+// Export exports metrics for Prometheus
 func (m *PingMetricExporter) Export(ch chan<- prometheus.Metric, pk string) {
-	labelValues := make([]string, 0)
-	labelValues = append(labelValues, pk, strconv.Itoa(m.ProbeId), m.DstAddr, m.DstName, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion))
+	labelValues := []string{pk, strconv.Itoa(m.ProbeId), m.DstAddr, m.DstName, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion)}
 
 	if m.Min > 0 {
 		ch <- prometheus.MustNewConstMetric(successDesc, prometheus.GaugeValue, 1, labelValues...)
@@ -83,7 +81,7 @@ func (m *PingMetricExporter) Export(ch chan<- prometheus.Metric, pk string) {
 	ch <- prometheus.MustNewConstMetric(sizeDesc, prometheus.GaugeValue, float64(m.Size), labelValues...)
 }
 
-// Describe exports metric descriptions for prometheus
+// Describe exports metric descriptions for Prometheus
 func (m *PingMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- successDesc
 	ch <- minLatencyDesc
