@@ -20,7 +20,7 @@ var (
 )
 
 func init() {
-	labels = []string{"measurement", "probe", "dst_addr", "dst_name", "asn", "ip_version"}
+	labels = []string{"measurement", "probe", "dst_addr", "dst_name", "asn", "ip_version", "protocol"}
 
 	successDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "success"), "Destination was reachable", labels, nil)
 	hopDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "hops"), "Number of hops", labels, nil)
@@ -37,11 +37,12 @@ type TracerouteMetricExporter struct {
 	Rtt       float64
 	Asn       int
 	IpVersion int
+	Protocol  string
 }
 
 // FromResult creates metric exporter for traceroute measurement result
 func FromResult(r *measurement.Result) *TracerouteMetricExporter {
-	m := &TracerouteMetricExporter{ProbeId: r.PrbId(), DstAddr: r.DstAddr(), DstName: r.DstName(), HopCount: len(r.TracerouteResults()), IpVersion: r.Af()}
+	m := &TracerouteMetricExporter{ProbeId: r.PrbId(), DstAddr: r.DstAddr(), DstName: r.DstName(), HopCount: len(r.TracerouteResults()), IpVersion: r.Af(), Protocol: r.Proto()}
 	processLastHop(r, m)
 
 	return m
@@ -63,7 +64,7 @@ func processLastHop(r *measurement.Result, m *TracerouteMetricExporter) {
 
 // Export exports metrics for Prometheus
 func (m *TracerouteMetricExporter) Export(ch chan<- prometheus.Metric, pk string) {
-	labelValues := []string{pk, strconv.Itoa(m.ProbeId), m.DstAddr, m.DstName, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion)}
+	labelValues := []string{pk, strconv.Itoa(m.ProbeId), m.DstAddr, m.DstName, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion), m.Protocol}
 
 	ch <- prometheus.MustNewConstMetric(successDesc, prometheus.GaugeValue, float64(m.Success), labelValues...)
 	ch <- prometheus.MustNewConstMetric(hopDesc, prometheus.GaugeValue, float64(m.HopCount), labelValues...)
