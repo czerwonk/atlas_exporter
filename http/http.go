@@ -33,7 +33,7 @@ func init() {
 	bodySizeDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "body_size"), "Body size in bytes", labels, nil)
 	headerSizeDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "header_size"), "Header size in bytes", labels, nil)
 	rttDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "rtt"), "Round trip time in ms", labels, nil)
-	dnsErrDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "dns_error"), "Round trip time in ms", labels, nil)
+	dnsErrDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "dns_error"), "A DNS error occured (0 if not)", labels, nil)
 }
 
 // HttpMetricExporter exports metrics for HTTP measurement results
