@@ -52,7 +52,7 @@ func init() {
 	sentDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "sent"), "Number of sent icmp requests", labels, nil)
 	rcvdDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "received"), "Number of received icmp repsponses", labels, nil)
 	dupDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "dup"), "Number of duplicate icmp repsponses", labels, nil)
-	ttlDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "ttl"), "Time to live remaining", labels, nil)
+	ttlDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "ttl"), "Time-to-live field in the response", labels, nil)
 	sizeDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "size"), "Size of ICMP packet", labels, nil)
 }
 
