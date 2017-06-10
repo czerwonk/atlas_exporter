@@ -95,6 +95,10 @@ see https://prometheus.io/
 ## The RIPE Atlas Project
 see http://atlas.ripe.net
 
+## Further reading
+I wrote an article about atlas_exporter for RIPE Labs. It covers version 0.5.
+https://labs.ripe.net/Members/daniel_czerwonk/using-ripe-atlas-measurement-results-in-prometheus-with-atlas_exporter
+
 [travis]: https://travis-ci.org/czerwonk/atlas_exporter
 [dockerbuild]: https://hub.docker.com/r/czerwonk/atlas_exporter/builds
 [goreportcard]: https://goreportcard.com/report/github.com/czerwonk/atlas_exporter
