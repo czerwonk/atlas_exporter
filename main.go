@@ -63,7 +63,7 @@ func startServer() {
 			<h2>Example</h2>
 			<p>Metrics for measurement with id 8809582:</p>
 			<p><a href="` + *metricsPath + `?measurement_id=8809582">` + r.Host + *metricsPath + `?measurement_id=8809582</a></p>
-			<h2>More Information</h2>
+			<h2>More information</h2>
 			<p><a href="https://github.com/czerwonk/atlas_exporter">github.com/czerwonk/atlas_exporter</a></p>
 			</body>
 			</html>`))
