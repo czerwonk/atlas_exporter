@@ -15,7 +15,7 @@ import (
 	"github.com/prometheus/common/log"
 )
 
-const version string = "0.5.1"
+const version string = "0.5.2"
 
 var (
 	showVersion          = flag.Bool("version", false, "Print version information.")
@@ -55,6 +55,19 @@ func printVersion() {
 
 func startServer() {
 	log.Infof("Starting atlas exporter (Version: %s)\n", version)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`<html>
+			<head><title>RIPE Atlas Exporter (Version ` + version + `)</title></head>
+			<body>
+			<h1>RIPE Atlas Exporter</h1>
+			<h2>Example</h2>
+			<p>Metrics for measurement with id 8809582:</p>
+			<p><a href="` + *metricsPath + `?measurement_id=8809582">` + r.Host + *metricsPath + `?measurement_id=8809582</a></p>
+			<h2>More Information</h2>
+			<p><a href="https://github.com/czerwonk/atlas_exporter">github.com/czerwonk/atlas_exporter</a></p>
+			</body>
+			</html>`))
+	})
 	http.HandleFunc(*metricsPath, errorHandler(handleMetricsRequest))
 
 	log.Infof("Cache TTL: %v\n", time.Duration(*cacheTtl)*time.Second)
