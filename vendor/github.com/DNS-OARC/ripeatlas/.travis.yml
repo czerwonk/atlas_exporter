@@ -1,0 +1,6 @@
+language: go
+go:
+  - master
+install:
+  - go get github.com/miekg/dns
+  - go get github.com/graarh/golang-socketio
