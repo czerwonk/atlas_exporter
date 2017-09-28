@@ -1,7 +1,7 @@
 language: go
 go:
 - 1.8
-script: make test
+script: make test gox
 deploy:
   provider: releases
   api_key:
