@@ -1,7 +1,7 @@
 language: go
 go:
 - 1.8
-script: make init test gox
+script: make init test vet lint errcheck gox
 deploy:
   provider: releases
   api_key:
