@@ -5,7 +5,21 @@ deploy:
   provider: releases
   api_key:
     secure: VBkbwBoMVsYTZ02etqfZwt2BUXVRgXYrBU4FL5ciQNEGGRGeFrytL7WQ44cnQbMFtJupMfotLI6RbxLesbGSsRqfJMxDUrQVhopo9RY7anyoACxnY9B+jy1etJlIl4ItMb7WBfPtATW0J2S4V2t7eSKweu7ZmHlrE9Cg7hpflRTFBSiQ5VwTEEvUXV4E1KUdxt8aRUKfvQ1Q+e19fb2bu6wCPM2YJh54t2SfsFzGVljqrN/HvGEY1e7OvzB9wzAeH30aVAJRZIeSMSSUToNwZyBRazZzahqirMclJn7hg3nX+a0Fej2t1nFdqancCzs5zXL1T1lCZLPewGQzoR7GMzfNWLAOud8ZRQDys4insvwM+C0+wqlWY2X8VKkc7aZ8IVdDVEsrZI1sNXafFtayGpV5RzwCQc6DjE4WzEYf4g9snjv5y7ZV/RvZM2yIBy4B3sktnijWTKUvMkmoZV02aaqh+0VJYh+ERdbFka9fe7eBGq1DJRIj+pDiStgs5U3eGbaARMLVHMbwPJMNdvKX5jB6v6LTWAiIQqKnnyTvS4ru/r91pwQybrBOb93v0m+STWwaGUT0/7DhFLHf9D3wMhPe3lCk4QdrMyCNwvKafoWJ3uC9UPdGPvhWqvujO6URKa9DWzRrBDPmb6pdxrhM7A4+Bf1YI6L2aV7n6RREJ5c=
-  file: atlas_exporter-*
+  file: 
+    - atlas_exporter-0.6.0_freebsd_386
+    - atlas_exporter-0.6.0_linux_amd64
+    - atlas_exporter-0.6.0_linux_ppc64le
+    - atlas_exporter-0.6.0_openbsd_386
+    - atlas_exporter-0.6.0_freebsd_amd64
+    - atlas_exporter-0.6.0_linux_arm
+    - atlas_exporter-0.6.0_netbsd_386
+    - atlas_exporter-0.6.0_openbsd_amd64
+    - atlas_exporter-0.6.0_freebsd_arm
+    - atlas_exporter-0.6.0_linux_arm64
+    - atlas_exporter-0.6.0_netbsd_amd64
+    - atlas_exporter-0.6.0_linux_386
+    - atlas_exporter-0.6.0_linux_ppc64
+    - atlas_exporter-0.6.0_netbsd_arm
   skip_cleanup: true
   on:
     repo: czerwonk/atlas_exporter
