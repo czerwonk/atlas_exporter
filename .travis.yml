@@ -9,4 +9,4 @@ deploy:
   file: atlas_exporter-*
   skip_cleanup: true
   on:
-    repo: czerwonk/atlas_exporter
+    tags: true 
