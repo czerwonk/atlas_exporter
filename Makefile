@@ -24,6 +24,7 @@ MAKE_COLOR=\033[33;01m%-20s\033[0m
 
 MAIN = github.com/czerwonk/atlas_exporter
 SRCS = $(shell git ls-files '*.go' | grep -v '^vendor/')
+PKGS = $(shell go list ./... | grep -v '/vendor/')
 EXE = $(shell ls atlas_exporter-*_*)
 
 .DEFAULT_GOAL := help
