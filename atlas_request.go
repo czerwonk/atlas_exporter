@@ -21,7 +21,7 @@ import (
 var cache *probe.ProbeCache
 
 func initCache() {
-	cache = probe.NewCache(time.Duration(*cacheTtl) * time.Second)
+	cache = probe.NewCache(time.Duration(*cacheTTL) * time.Second)
 	startCacheCleanupFunc(time.Duration(*cacheCleanUp) * time.Second)
 }
 
