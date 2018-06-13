@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/DNS-OARC/ripeatlas/measurement"
+	"github.com/czerwonk/atlas_exporter/probe"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -27,19 +28,6 @@ var (
 
 // PingMetricExporter exports metrics for PING measurement results
 type PingMetricExporter struct {
-	ProbeId   int
-	DstAddr   string
-	DstName   string
-	Min       float64
-	Max       float64
-	Avg       float64
-	Sent      int
-	Rcvd      int
-	Dup       int
-	Ttl       int
-	Size      int
-	Asn       int
-	IpVersion int
 }
 
 func init() {
@@ -56,29 +44,31 @@ func init() {
 	sizeDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "size"), "Size of ICMP packet", labels, nil)
 }
 
-// FromResult creates  metric exporter for PING measurement result
-func FromResult(r *measurement.Result) *PingMetricExporter {
-	return &PingMetricExporter{ProbeId: r.PrbId(), DstAddr: r.DstAddr(), DstName: r.DstName(), Max: r.Max(), Min: r.Min(), Rcvd: r.Rcvd(), Avg: r.Avg(), Sent: r.Sent(), Dup: r.Dup(), Ttl: r.Ttl(), Size: r.Size(), IpVersion: r.Af()}
-}
+// Export exports a prometheus metric
+func (m *PingMetricExporter) Export(id string, res *measurement.Result, probe *probe.Probe, ch chan<- prometheus.Metric) {
+	labelValues := []string{
+		id,
+		strconv.Itoa(probe.Id),
+		res.DstAddr(),
+		res.DstName(),
+		strconv.Itoa(probe.ASNForIPVersion(res.Af())),
+		strconv.Itoa(res.Af()),
+	}
 
-// Export exports metrics for Prometheus
-func (m *PingMetricExporter) Export(ch chan<- prometheus.Metric, pk string) {
-	labelValues := []string{pk, strconv.Itoa(m.ProbeId), m.DstAddr, m.DstName, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion)}
-
-	if m.Min > 0 {
+	if res.Min() > 0 {
 		ch <- prometheus.MustNewConstMetric(successDesc, prometheus.GaugeValue, 1, labelValues...)
-		ch <- prometheus.MustNewConstMetric(minLatencyDesc, prometheus.GaugeValue, m.Min, labelValues...)
-		ch <- prometheus.MustNewConstMetric(maxLatencyDesc, prometheus.GaugeValue, m.Max, labelValues...)
-		ch <- prometheus.MustNewConstMetric(avgLatencyDesc, prometheus.GaugeValue, m.Avg, labelValues...)
+		ch <- prometheus.MustNewConstMetric(minLatencyDesc, prometheus.GaugeValue, res.Min(), labelValues...)
+		ch <- prometheus.MustNewConstMetric(maxLatencyDesc, prometheus.GaugeValue, res.Max(), labelValues...)
+		ch <- prometheus.MustNewConstMetric(avgLatencyDesc, prometheus.GaugeValue, res.Avg(), labelValues...)
 	} else {
 		ch <- prometheus.MustNewConstMetric(successDesc, prometheus.GaugeValue, 0, labelValues...)
 	}
 
-	ch <- prometheus.MustNewConstMetric(sentDesc, prometheus.GaugeValue, float64(m.Sent), labelValues...)
-	ch <- prometheus.MustNewConstMetric(rcvdDesc, prometheus.GaugeValue, float64(m.Rcvd), labelValues...)
-	ch <- prometheus.MustNewConstMetric(dupDesc, prometheus.GaugeValue, float64(m.Dup), labelValues...)
-	ch <- prometheus.MustNewConstMetric(ttlDesc, prometheus.GaugeValue, float64(m.Ttl), labelValues...)
-	ch <- prometheus.MustNewConstMetric(sizeDesc, prometheus.GaugeValue, float64(m.Size), labelValues...)
+	ch <- prometheus.MustNewConstMetric(sentDesc, prometheus.GaugeValue, float64(res.Sent()), labelValues...)
+	ch <- prometheus.MustNewConstMetric(rcvdDesc, prometheus.GaugeValue, float64(res.Rcvd()), labelValues...)
+	ch <- prometheus.MustNewConstMetric(dupDesc, prometheus.GaugeValue, float64(res.Dup()), labelValues...)
+	ch <- prometheus.MustNewConstMetric(ttlDesc, prometheus.GaugeValue, float64(res.Ttl()), labelValues...)
+	ch <- prometheus.MustNewConstMetric(sizeDesc, prometheus.GaugeValue, float64(res.Size()), labelValues...)
 }
 
 // Describe exports metric descriptions for Prometheus
@@ -94,12 +84,7 @@ func (m *PingMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- sizeDesc
 }
 
-// SetAsn sets AS number for measurement result
-func (m *PingMetricExporter) SetAsn(asn int) {
-	m.Asn = asn
-}
-
 // IsValid returns whether an result is valid or not (e.g. IPv6 measurement and Probe does not support IPv6)
-func (m *PingMetricExporter) IsValid() bool {
-	return m.Asn > 0
+func (m *PingMetricExporter) IsValid(res *measurement.Result, probe *probe.Probe) bool {
+	return probe.ASNForIPVersion(res.Af()) > 0
 }

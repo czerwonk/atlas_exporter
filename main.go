@@ -1,21 +1,22 @@
 package main
 
 import (
-	"errors"
+	"bytes"
+	"context"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
-
 	"time"
 
-	"github.com/czerwonk/atlas_exporter/metric"
+	"github.com/czerwonk/atlas_exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/log"
 )
 
-const version string = "0.6.1"
+const version string = "0.7.0"
 
 var (
 	showVersion          = flag.Bool("version", false, "Print version information.")
@@ -25,6 +26,8 @@ var (
 	cacheTTL             = flag.Int("cache.ttl", 3600, "Cache time to live in seconds")
 	cacheCleanUp         = flag.Int("cache.cleanup", 300, "Interval for cache clean up in seconds")
 	configFile           = flag.String("config.file", "", "Path to congig file to use")
+	timeout              = flag.Duration("timeout", 60*time.Second, "Timeout")
+	cfg                  *config.Config
 )
 
 func init() {
@@ -43,6 +46,12 @@ func main() {
 		os.Exit(0)
 	}
 
+	err := loadConfig()
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+
 	startServer()
 }
 
@@ -52,6 +61,26 @@ func printVersion() {
 	fmt.Println("Author(s): Daniel Czerwonk")
 	fmt.Println("Metric exporter for RIPE Atlas measurements")
 	fmt.Println("This software uses Go bindings from the DNS-OARC project (https://github.com/DNS-OARC/ripeatlas)")
+}
+
+func loadConfig() error {
+	if len(*configFile) == 0 {
+		cfg = &config.Config{}
+		return nil
+	}
+
+	b, err := ioutil.ReadFile(*configFile)
+	if err != nil {
+		return fmt.Errorf("could not open config file: %v", err)
+	}
+
+	c, err := config.Load(bytes.NewReader(b))
+	if err != nil {
+		return fmt.Errorf("could not parse config file: %v", err)
+	}
+	cfg = c
+
+	return nil
 }
 
 func startServer() {
@@ -95,18 +124,30 @@ func errorHandler(f func(http.ResponseWriter, *http.Request) error) http.Handler
 func handleMetricsRequest(w http.ResponseWriter, r *http.Request) error {
 	id := r.URL.Query().Get("measurement_id")
 
-	if len(id) == 0 {
-		return errors.New("Parameter measurement_id has to be defined")
+	ids := []string{}
+	if len(id) > 0 {
+		ids = append(ids, id)
+	} else {
+		ids = append(ids, cfg.Measurements...)
 	}
 
-	metrics, err := getMeasurement(id)
+	if len(ids) == 0 {
+		return nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), *timeout)
+	defer cancel()
+
+	measurements, err := getMeasurements(ctx, ids)
 	if err != nil {
 		return err
 	}
 
-	if len(metrics) > 0 {
+	if len(measurements) > 0 {
 		reg := prometheus.NewRegistry()
-		reg.MustRegister(metric.NewMetricCollector(id, metrics))
+
+		c := newCollector(measurements, *filterInvalidResults)
+		reg.MustRegister(c)
 
 		promhttp.HandlerFor(reg, promhttp.HandlerOpts{
 			ErrorLog:      log.NewErrorLogger(),

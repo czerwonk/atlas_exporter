@@ -22,3 +22,12 @@ func FromJson(body []byte) (*Probe, error) {
 
 	return &p, nil
 }
+
+// ASNForIPVersion return the ASN for the given IP Version
+func (p *Probe) ASNForIPVersion(v int) int {
+	if v == 6 {
+		return p.Asn6
+	}
+
+	return p.Asn4
+}

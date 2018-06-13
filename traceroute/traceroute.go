@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/DNS-OARC/ripeatlas/measurement"
+	"github.com/czerwonk/atlas_exporter/probe"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -29,49 +30,44 @@ func init() {
 
 // TracerouteMetricExporter exports metrics for traceroute measurement results
 type TracerouteMetricExporter struct {
-	ProbeId   int
-	DstAddr   string
-	DstName   string
-	HopCount  int
-	Success   int
-	Rtt       float64
-	Asn       int
-	IpVersion int
-	Protocol  string
 }
 
-// FromResult creates metric exporter for traceroute measurement result
-func FromResult(r *measurement.Result) *TracerouteMetricExporter {
-	m := &TracerouteMetricExporter{ProbeId: r.PrbId(), DstAddr: r.DstAddr(), DstName: r.DstName(), HopCount: len(r.TracerouteResults()), IpVersion: r.Af(), Protocol: r.Proto()}
-	processLastHop(r, m)
+// Export exports a prometheus metric
+func (m *TracerouteMetricExporter) Export(id string, res *measurement.Result, probe *probe.Probe, ch chan<- prometheus.Metric) {
+	labelValues := []string{
+		id,
+		strconv.Itoa(probe.Id),
+		res.DstAddr(),
+		res.DstName(),
+		strconv.Itoa(probe.ASNForIPVersion(res.Af())),
+		strconv.Itoa(res.Af()),
+		res.Proto(),
+	}
 
-	return m
+	success, rtt := processLastHop(res)
+	hops := float64(len(res.TracerouteResults()))
+	ch <- prometheus.MustNewConstMetric(successDesc, prometheus.GaugeValue, success, labelValues...)
+	ch <- prometheus.MustNewConstMetric(hopDesc, prometheus.GaugeValue, hops, labelValues...)
+
+	if rtt > 0 {
+		ch <- prometheus.MustNewConstMetric(rttDesc, prometheus.GaugeValue, rtt, labelValues...)
+	}
 }
 
-func processLastHop(r *measurement.Result, m *TracerouteMetricExporter) {
+func processLastHop(r *measurement.Result) (success float64, rtt float64) {
 	if len(r.TracerouteResults()) == 0 {
-		return
+		return success, rtt
 	}
 
 	last := r.TracerouteResults()[len(r.TracerouteResults())-1]
 	for _, rep := range last.Replies() {
 		if rep.From() == r.DstAddr() {
-			m.Success = 1
-			m.Rtt = rep.Rtt()
+			success = 1
+			rtt = r.Rt()
 		}
 	}
-}
 
-// Export exports metrics for Prometheus
-func (m *TracerouteMetricExporter) Export(ch chan<- prometheus.Metric, pk string) {
-	labelValues := []string{pk, strconv.Itoa(m.ProbeId), m.DstAddr, m.DstName, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion), m.Protocol}
-
-	ch <- prometheus.MustNewConstMetric(successDesc, prometheus.GaugeValue, float64(m.Success), labelValues...)
-	ch <- prometheus.MustNewConstMetric(hopDesc, prometheus.GaugeValue, float64(m.HopCount), labelValues...)
-
-	if m.Rtt > 0 {
-		ch <- prometheus.MustNewConstMetric(rttDesc, prometheus.GaugeValue, m.Rtt, labelValues...)
-	}
+	return success, rtt
 }
 
 // Describe exports metric descriptions for Prometheus
@@ -81,12 +77,7 @@ func (m *TracerouteMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- rttDesc
 }
 
-// SetAsn sets AS number for measurement result
-func (m *TracerouteMetricExporter) SetAsn(asn int) {
-	m.Asn = asn
-}
-
 // IsValid returns whether an result is valid or not (e.g. IPv6 measurement and Probe does not support IPv6)
-func (m *TracerouteMetricExporter) IsValid() bool {
-	return (m.Success == 1 || m.HopCount > 1) && m.Asn > 0
+func (m *TracerouteMetricExporter) IsValid(res *measurement.Result, probe *probe.Probe) bool {
+	return probe.ASNForIPVersion(res.Af()) > 0 && len(res.TracerouteResults()) > 1
 }
