@@ -151,7 +151,6 @@ func startConsumers(idChan chan int, out chan<- *probe.Probe, errCh chan<- error
 			defer wg.Done()
 			for id := range idChan {
 				probeForID(id, out, errCh)
-				log.Infof("got probe information for probe %d", id)
 			}
 		}()
 	}
