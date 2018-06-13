@@ -15,15 +15,16 @@ import (
 	"github.com/prometheus/common/log"
 )
 
-const version string = "0.6.0"
+const version string = "0.6.1"
 
 var (
 	showVersion          = flag.Bool("version", false, "Print version information.")
 	listenAddress        = flag.String("web.listen-address", ":9400", "Address on which to expose metrics and web interface.")
 	metricsPath          = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
 	filterInvalidResults = flag.Bool("filter.invalid-results", true, "Exclude offline/incompatible probes")
-	cacheTtl             = flag.Int("cache.ttl", 3600, "Cache time to live in seconds")
+	cacheTTL             = flag.Int("cache.ttl", 3600, "Cache time to live in seconds")
 	cacheCleanUp         = flag.Int("cache.cleanup", 300, "Interval for cache clean up in seconds")
+	configFile           = flag.String("config.file", "", "Path to congig file to use")
 )
 
 func init() {
@@ -61,6 +62,8 @@ func startServer() {
 			<body>
 			<h1>RIPE Atlas Exporter</h1>
 			<h2>Example</h2>
+			<p>Metrics for measurement configured in configuration file:</p>
+			<p><a href="` + *metricsPath + `>` + r.Host + *metricsPath + `</a></p>
 			<p>Metrics for measurement with id 8809582:</p>
 			<p><a href="` + *metricsPath + `?measurement_id=8809582">` + r.Host + *metricsPath + `?measurement_id=8809582</a></p>
 			<h2>More information</h2>
@@ -70,7 +73,7 @@ func startServer() {
 	})
 	http.HandleFunc(*metricsPath, errorHandler(handleMetricsRequest))
 
-	log.Infof("Cache TTL: %v\n", time.Duration(*cacheTtl)*time.Second)
+	log.Infof("Cache TTL: %v\n", time.Duration(*cacheTTL)*time.Second)
 	log.Infof("Cache cleanup interval (seconds): %v\n", time.Duration(*cacheCleanUp)*time.Second)
 	initCache()
 
@@ -97,7 +100,6 @@ func handleMetricsRequest(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	metrics, err := getMeasurement(id)
-
 	if err != nil {
 		return err
 	}
