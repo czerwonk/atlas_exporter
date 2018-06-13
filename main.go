@@ -27,6 +27,7 @@ var (
 	cacheCleanUp         = flag.Int("cache.cleanup", 300, "Interval for cache clean up in seconds")
 	configFile           = flag.String("config.file", "", "Path to congig file to use")
 	timeout              = flag.Duration("timeout", 60*time.Second, "Timeout")
+	workerCount          = flag.Int("worker.count", 8, "Number of go routines retrieving probe information")
 	cfg                  *config.Config
 )
 

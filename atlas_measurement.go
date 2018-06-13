@@ -107,24 +107,74 @@ func getMeasurementForID(ctx context.Context, id string, ch chan<- *atlasMeasure
 func probesForResults(res []*measurement.Result) (map[int]*probe.Probe, error) {
 	probes := make(map[int]*probe.Probe)
 
-	for _, m := range res {
-		id := m.PrbId()
-		p, found := cache.Get(id)
-		if found {
-			probes[id] = p
-			continue
-		}
+	in := startProducer(res)
+	out := make(chan *probe.Probe)
+	errCh := make(chan error)
 
-		p, err := probe.Get(id)
-		if err != nil {
-			return nil, fmt.Errorf("could not retrieve probe information for probe %d: %v", id, err)
-		}
+	go func() {
+		startConsumers(in, out, errCh)
+	}()
 
-		cache.Add(id, p)
-		probes[id] = p
+	for {
+		select {
+		case err := <-errCh:
+			return nil, err
+		case p, more := <-out:
+			if !more {
+				return probes, nil
+			}
+
+			probes[p.Id] = p
+		}
+	}
+}
+
+func startProducer(res []*measurement.Result) chan int {
+	ch := make(chan int)
+
+	go func() {
+		for _, m := range res {
+			ch <- m.PrbId()
+		}
+		close(ch)
+	}()
+
+	return ch
+}
+
+func startConsumers(idChan chan int, out chan<- *probe.Probe, errCh chan<- error) {
+	wg := sync.WaitGroup{}
+	wg.Add(*workerCount)
+
+	for i := 0; i < *workerCount; i++ {
+		go func() {
+			defer wg.Done()
+			for id := range idChan {
+				probeForID(id, out, errCh)
+				log.Infof("got probe information for probe %d", id)
+			}
+		}()
 	}
 
-	return probes, nil
+	wg.Wait()
+	close(out)
+}
+
+func probeForID(id int, ch chan<- *probe.Probe, errCh chan<- error) {
+	p, found := cache.Get(id)
+	if found {
+		ch <- p
+		return
+	}
+
+	p, err := probe.Get(id)
+	if err != nil {
+		errCh <- fmt.Errorf("could not retrieve probe information for probe %d: %v", id, err)
+		return
+	}
+
+	cache.Add(id, p)
+	ch <- p
 }
 
 func exporterForType(t string) (MetricExporter, error) {
