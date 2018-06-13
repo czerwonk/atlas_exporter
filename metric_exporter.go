@@ -6,7 +6,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-// MetricExporter defines a metric for an ATLAS measurement type
+// MetricExporter defines a set of metrics for an ATLAS measurement type
 type MetricExporter interface {
 
 	// Export exports a prometheus metric
