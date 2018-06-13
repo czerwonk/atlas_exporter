@@ -58,7 +58,7 @@ build: ## Make binary
 .PHONY: test
 test: ## Launch unit tests
 	@echo -e "$(OK_COLOR)[$(APP)] Launch unit tests $(NO_COLOR)"
-	@go test
+	@go test ./...
 
 .PHONY: lint
 lint: ## Launch golint
@@ -66,7 +66,7 @@ lint: ## Launch golint
 
 .PHONY: vet
 vet: ## Launch go vet
-	@$(foreach file,$(SRCS),$(GO) vet $(file) || exit;)
+	$(GO) vet ./...
 
 .PHONY: coverage
 coverage: ## Launch code coverage
