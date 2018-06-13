@@ -23,7 +23,7 @@ var (
 )
 
 func init() {
-	labels = []string{"measurement", "probe", "dst_addr", "dst_name", "asn", "ip_version", "country_code"}
+	labels = []string{"measurement", "probe", "dst_addr", "dst_name", "asn", "ip_version", "country_code", "lat", "long"}
 
 	pollDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "poll"), "Poll", labels, nil)
 	precisionDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "precision"), "Precision", labels, nil)
@@ -46,6 +46,8 @@ func (m *NTPMetricExporter) Export(id string, res *measurement.Result, probe *pr
 		strconv.Itoa(probe.ASNForIPVersion(res.Af())),
 		strconv.Itoa(res.Af()),
 		probe.CountryCode,
+		probe.Latitude(),
+		probe.Longitude(),
 	}
 
 	ch <- prometheus.MustNewConstMetric(pollDesc, prometheus.GaugeValue, res.Poll(), labelValues...)

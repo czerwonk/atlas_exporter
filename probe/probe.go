@@ -2,6 +2,7 @@ package probe
 
 import (
 	"encoding/json"
+	"strconv"
 )
 
 // Probe holds information about a single Atlas probe
@@ -34,4 +35,22 @@ func (p *Probe) ASNForIPVersion(v int) int {
 	}
 
 	return p.Asn4
+}
+
+// Latitude of the geo location of the probe
+func (p *Probe) Latitude() string {
+	if len(p.Geometry.Coordinates) == 0 {
+		return ""
+	}
+
+	return strconv.FormatFloat(p.Geometry.Coordinates[0], 'f', 4, 64)
+}
+
+// Longitude of the geo location of the probe
+func (p *Probe) Longitude() string {
+	if len(p.Geometry.Coordinates) == 0 {
+		return ""
+	}
+
+	return strconv.FormatFloat(p.Geometry.Coordinates[1], 'f', 4, 64)
 }

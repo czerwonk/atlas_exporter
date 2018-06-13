@@ -26,7 +26,7 @@ var (
 )
 
 func init() {
-	labels = []string{"measurement", "probe", "dst_addr", "asn", "ip_version", "uri", "method", "country_code"}
+	labels = []string{"measurement", "probe", "dst_addr", "asn", "ip_version", "uri", "method", "country_code", "lat", "long"}
 
 	successDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "success"), "Destination was reachable", labels, nil)
 	resultDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "result"), "Code returned from http server", labels, nil)
@@ -53,6 +53,8 @@ func (m *HTTPMetricExporter) Export(id string, res *measurement.Result, probe *p
 			res.Uri(),
 			h.Method(),
 			probe.CountryCode,
+			probe.Latitude(),
+			probe.Longitude(),
 		}
 
 		dnsError := 0

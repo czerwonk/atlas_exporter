@@ -31,7 +31,7 @@ type PingMetricExporter struct {
 }
 
 func init() {
-	labels = []string{"measurement", "probe", "dst_addr", "dst_name", "asn", "ip_version", "country_code"}
+	labels = []string{"measurement", "probe", "dst_addr", "dst_name", "asn", "ip_version", "country_code", "lat", "long"}
 
 	successDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "success"), "Destination was reachable", labels, nil)
 	minLatencyDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "min_latency"), "Minimum latency", labels, nil)
@@ -54,6 +54,8 @@ func (m *PingMetricExporter) Export(id string, res *measurement.Result, probe *p
 		strconv.Itoa(probe.ASNForIPVersion(res.Af())),
 		strconv.Itoa(res.Af()),
 		probe.CountryCode,
+		probe.Latitude(),
+		probe.Longitude(),
 	}
 
 	if res.Min() > 0 {
