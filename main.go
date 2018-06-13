@@ -93,7 +93,7 @@ func startServer() {
 			<h1>RIPE Atlas Exporter</h1>
 			<h2>Example</h2>
 			<p>Metrics for measurement configured in configuration file:</p>
-			<p><a href="` + *metricsPath + `>` + r.Host + *metricsPath + `</a></p>
+			<p><a href="` + *metricsPath + `">` + r.Host + *metricsPath + `</a></p>
 			<p>Metrics for measurement with id 8809582:</p>
 			<p><a href="` + *metricsPath + `?measurement_id=8809582">` + r.Host + *metricsPath + `?measurement_id=8809582</a></p>
 			<h2>More information</h2>
