@@ -26,7 +26,7 @@ var (
 )
 
 func init() {
-	labels = []string{"measurement", "probe", "dst_addr", "asn", "ip_version", "uri", "method"}
+	labels = []string{"measurement", "probe", "dst_addr", "asn", "ip_version", "uri", "method", "country_code"}
 
 	successDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "success"), "Destination was reachable", labels, nil)
 	resultDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "result"), "Code returned from http server", labels, nil)
@@ -41,34 +41,18 @@ func init() {
 type HTTPMetricExporter struct {
 }
 
-/*
-func (m *HttpMetricExporter) fillFromHttpResult(h *http.Result) {
-	m.IpVersion = h.Af()
-	m.DstAddr = h.DstAddr()
-	m.ReturnCode = h.Res()
-	m.BodySize = h.Bsize()
-	m.HeaderSize = h.Hsize()
-	m.Method = h.Method()
-	m.HttpVersion, _ = strconv.ParseFloat(h.Ver(), 64)
-	m.Rtt = h.Rt()
-
-	if len(h.Dnserr()) > 0 {
-		m.DnsError = 1
-	}
-}
-*/
-
 // Export exports metrics for Prometheus
 func (m *HTTPMetricExporter) Export(id string, res *measurement.Result, probe *probe.Probe, ch chan<- prometheus.Metric) {
 	for _, h := range res.HttpResults() {
 		labelValues := []string{
 			id,
-			strconv.Itoa(probe.Id),
+			strconv.Itoa(probe.ID),
 			h.DstAddr(),
 			strconv.Itoa(probe.ASNForIPVersion(h.Af())),
 			strconv.Itoa(h.Af()),
 			res.Uri(),
 			h.Method(),
+			probe.CountryCode,
 		}
 
 		dnsError := 0

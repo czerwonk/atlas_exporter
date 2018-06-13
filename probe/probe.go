@@ -6,9 +6,13 @@ import (
 
 // Probe holds information about a single Atlas probe
 type Probe struct {
-	Id   int `json:"id"`
-	Asn4 int `json:"asn_v4"`
-	Asn6 int `json:"asn_v6"`
+	ID          int    `json:"id"`
+	Asn4        int    `json:"asn_v4"`
+	Asn6        int    `json:"asn_v6"`
+	CountryCode string `json:"country_code"`
+	Geometry    struct {
+		Coordinates []float64 `json:"coordinates"`
+	} `json:"geometry"`
 }
 
 // FromJson parses json and returns a probe

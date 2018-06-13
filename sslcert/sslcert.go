@@ -23,7 +23,7 @@ var (
 )
 
 func init() {
-	labels = []string{"measurement", "probe", "dst_addr", "asn", "ip_version"}
+	labels = []string{"measurement", "probe", "dst_addr", "asn", "ip_version", "country_code"}
 
 	successDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "success"), "Destination was reachable", labels, nil)
 	sslVerDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "version"), "SSL/TLS version used for the request", labels, nil)
@@ -40,10 +40,11 @@ type SslCertMetricExporter struct {
 func (m *SslCertMetricExporter) Export(id string, res *measurement.Result, probe *probe.Probe, ch chan<- prometheus.Metric) {
 	labelValues := []string{
 		id,
-		strconv.Itoa(probe.Id),
+		strconv.Itoa(probe.ID),
 		res.DstAddr(),
 		strconv.Itoa(probe.ASNForIPVersion(res.Af())),
 		strconv.Itoa(res.Af()),
+		probe.CountryCode,
 	}
 
 	ver, _ := strconv.ParseFloat(res.Ver(), 64)

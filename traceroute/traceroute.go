@@ -21,7 +21,7 @@ var (
 )
 
 func init() {
-	labels = []string{"measurement", "probe", "dst_addr", "dst_name", "asn", "ip_version", "protocol"}
+	labels = []string{"measurement", "probe", "dst_addr", "dst_name", "asn", "ip_version", "protocol", "country_code"}
 
 	successDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "success"), "Destination was reachable", labels, nil)
 	hopDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "hops"), "Number of hops", labels, nil)
@@ -36,12 +36,13 @@ type TracerouteMetricExporter struct {
 func (m *TracerouteMetricExporter) Export(id string, res *measurement.Result, probe *probe.Probe, ch chan<- prometheus.Metric) {
 	labelValues := []string{
 		id,
-		strconv.Itoa(probe.Id),
+		strconv.Itoa(probe.ID),
 		res.DstAddr(),
 		res.DstName(),
 		strconv.Itoa(probe.ASNForIPVersion(res.Af())),
 		strconv.Itoa(res.Af()),
 		res.Proto(),
+		probe.CountryCode,
 	}
 
 	success, rtt := processLastHop(res)

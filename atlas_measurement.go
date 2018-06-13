@@ -124,7 +124,7 @@ func probesForResults(res []*measurement.Result) (map[int]*probe.Probe, error) {
 				return probes, nil
 			}
 
-			probes[p.Id] = p
+			probes[p.ID] = p
 		}
 	}
 }
