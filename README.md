@@ -8,7 +8,7 @@ Metric exporter for RIPE Atlas measurement results
 ## Remarks
 * this is an early version, more features will be added step by step
 * at the moment only the last result of an measurement is used
-* the required Go version is 1.8+.
+* the required Go version is 1.9+.
 
 ## Install
 ```
