@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/DNS-OARC/ripeatlas/measurement"
+	"github.com/czerwonk/atlas_exporter/probe"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -22,7 +23,7 @@ var (
 )
 
 func init() {
-	labels = []string{"measurement", "probe", "dst_addr", "dst_name", "asn", "ip_version"}
+	labels = []string{"measurement", "probe", "dst_addr", "dst_name", "asn", "ip_version", "country_code", "lat", "long"}
 
 	pollDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "poll"), "Poll", labels, nil)
 	precisionDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "precision"), "Precision", labels, nil)
@@ -31,38 +32,33 @@ func init() {
 	ntpVersionDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "ntp_version"), "NTP Version", labels, nil)
 }
 
-// NtpMetricExporter exports metrics for NTP measurement results
-type NtpMetricExporter struct {
-	ProbeId        int
-	DstAddr        string
-	DstName        string
-	Poll           float64
-	Precision      float64
-	RootDelay      float64
-	RootDispersion float64
-	Version        int
-	Asn            int
-	IpVersion      int
+// NTPMetricExporter exports metrics for NTP measurement results
+type NTPMetricExporter struct {
 }
 
-// FromResult creates  metric exporter for NTP measurement result
-func FromResult(r *measurement.Result) *NtpMetricExporter {
-	return &NtpMetricExporter{ProbeId: r.PrbId(), DstAddr: r.DstAddr(), DstName: r.DstName(), Poll: r.Poll(), Precision: r.Precision(), RootDelay: r.RootDelay(), RootDispersion: r.RootDispersion(), Version: r.Version(), IpVersion: r.Af()}
-}
+// Export exports a prometheus metric
+func (m *NTPMetricExporter) Export(id string, res *measurement.Result, probe *probe.Probe, ch chan<- prometheus.Metric) {
+	labelValues := []string{
+		id,
+		strconv.Itoa(probe.ID),
+		res.DstAddr(),
+		res.DstName(),
+		strconv.Itoa(probe.ASNForIPVersion(res.Af())),
+		strconv.Itoa(res.Af()),
+		probe.CountryCode,
+		probe.Latitude(),
+		probe.Longitude(),
+	}
 
-// Export exports metrics for Prometheus
-func (m *NtpMetricExporter) Export(ch chan<- prometheus.Metric, pk string) {
-	labelValues := []string{pk, strconv.Itoa(m.ProbeId), m.DstAddr, m.DstName, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion)}
-
-	ch <- prometheus.MustNewConstMetric(pollDesc, prometheus.GaugeValue, m.Poll, labelValues...)
-	ch <- prometheus.MustNewConstMetric(precisionDesc, prometheus.GaugeValue, m.Precision, labelValues...)
-	ch <- prometheus.MustNewConstMetric(roolDelayDesc, prometheus.GaugeValue, m.RootDelay, labelValues...)
-	ch <- prometheus.MustNewConstMetric(rootDispersionDesc, prometheus.GaugeValue, m.RootDispersion, labelValues...)
-	ch <- prometheus.MustNewConstMetric(ntpVersionDesc, prometheus.GaugeValue, float64(m.Version), labelValues...)
+	ch <- prometheus.MustNewConstMetric(pollDesc, prometheus.GaugeValue, res.Poll(), labelValues...)
+	ch <- prometheus.MustNewConstMetric(precisionDesc, prometheus.GaugeValue, res.Precision(), labelValues...)
+	ch <- prometheus.MustNewConstMetric(roolDelayDesc, prometheus.GaugeValue, res.RootDelay(), labelValues...)
+	ch <- prometheus.MustNewConstMetric(rootDispersionDesc, prometheus.GaugeValue, res.RootDispersion(), labelValues...)
+	ch <- prometheus.MustNewConstMetric(ntpVersionDesc, prometheus.GaugeValue, float64(res.Version()), labelValues...)
 }
 
 // Describe exports metric descriptions for Prometheus
-func (m *NtpMetricExporter) Describe(ch chan<- *prometheus.Desc) {
+func (m *NTPMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- pollDesc
 	ch <- precisionDesc
 	ch <- roolDelayDesc
@@ -70,12 +66,7 @@ func (m *NtpMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- ntpVersionDesc
 }
 
-// SetAsn sets AS number for measurement result
-func (m *NtpMetricExporter) SetAsn(asn int) {
-	m.Asn = asn
-}
-
 // IsValid returns whether an result is valid or not (e.g. IPv6 measurement and Probe does not support IPv6)
-func (m *NtpMetricExporter) IsValid() bool {
-	return m.Asn > 0
+func (m *NTPMetricExporter) IsValid(res *measurement.Result, probe *probe.Probe) bool {
+	return probe.ASNForIPVersion(res.Af()) > 0
 }

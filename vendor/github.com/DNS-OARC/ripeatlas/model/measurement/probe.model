@@ -1,0 +1,2 @@
+id (integer): ID of this probe,
+url (string): The URL that contains the details of this probe

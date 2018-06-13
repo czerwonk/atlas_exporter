@@ -23,6 +23,7 @@ import (
     "fmt"
 
     "github.com/DNS-OARC/ripeatlas/measurement"
+    "github.com/DNS-OARC/ripeatlas/request"
 
     "github.com/graarh/golang-socketio"
     "github.com/graarh/golang-socketio/transport"
@@ -40,6 +41,10 @@ const (
 // NewHttp returns a new Atlaser for reading from the RIPE Atlas streaming API.
 func NewStream() *Stream {
     return &Stream{}
+}
+
+func (s *Stream) Measurements(p Params) (<-chan *Measurement, error) {
+    return nil, fmt.Errorf("Unimplemented")
 }
 
 // MeasurementLatest streams the latest measurement results, as described
@@ -66,7 +71,7 @@ func NewStream() *Stream {
 // "sendBacklog": none - Unimplemented
 //
 // "buffering": none - Unimplemented
-func (h *Stream) MeasurementLatest(p Params) (<-chan *measurement.Result, error) {
+func (s *Stream) MeasurementLatest(p Params) (<-chan *measurement.Result, error) {
     subscribe := make(map[string]interface{})
 
     subscribe["stream_type"] = "result"
@@ -156,6 +161,10 @@ func (h *Stream) MeasurementLatest(p Params) (<-chan *measurement.Result, error)
 
 // Since Stream streams the latest results (more or less, backlog sending
 // is available), MeasurementResults will just call MeasurementLatest.
-func (h *Stream) MeasurementResults(p Params) (<-chan *measurement.Result, error) {
-    return h.MeasurementResults(p)
+func (s *Stream) MeasurementResults(p Params) (<-chan *measurement.Result, error) {
+    return s.MeasurementLatest(p)
+}
+
+func (s *Stream) Probes(p Params) (<-chan *request.Probe, error) {
+    return nil, fmt.Errorf("Unimplemented")
 }

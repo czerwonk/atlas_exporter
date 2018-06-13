@@ -1,0 +1,5 @@
+requested (integer): Number of probes that have to be added or removed,
+type (string) = ['area' or 'country' or 'prefix' or 'msm' or 'asn' or 'probes' or '1' or '2' or '3' or '4' or '5' or '6']: Probe selector. Options are: `area` allows a compass quarter of the world, `asn` selects an Autonomous System, `country` selects a country, `msm` selects the probes used in another measurement, `prefix` selects probes based on prefix, `probes` selects probes directly,
+value (string): Value for given selector type. `area`: ['WW','West','North-Central','South-Central','North-East','South-East']. `asn`: ASN (integer). `country`: two-letter country code according to ISO 3166-1 alpha-2, e.g. GR. `msm`: measurement id (integer). `prefix`: prefix in CIDR notation, e.g. 193.0.0/16. `probes`: comma-separated list of probe IDs,
+tags_include (string): Comma-separated list of probe tags. Only probes with all these tags attached will be selected from this participation request,
+tags_exclude (string): Comma-separated list of probe tags. Probes with any of these tags attached will be excluded from this participation request

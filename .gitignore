@@ -1,6 +1,8 @@
 atlas_exporter
+debug
 
 .idea/*
+.vscode/*
 *.iml
 
 

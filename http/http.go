@@ -4,8 +4,9 @@ import (
 	"strconv"
 
 	"github.com/DNS-OARC/ripeatlas/measurement"
-	"github.com/DNS-OARC/ripeatlas/measurement/http"
+	"github.com/czerwonk/atlas_exporter/probe"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/log"
 )
 
 const (
@@ -25,7 +26,7 @@ var (
 )
 
 func init() {
-	labels = []string{"measurement", "probe", "dst_addr", "asn", "ip_version", "uri", "method"}
+	labels = []string{"measurement", "probe", "dst_addr", "asn", "ip_version", "uri", "method", "country_code", "lat", "long"}
 
 	successDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "success"), "Destination was reachable", labels, nil)
 	resultDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "result"), "Code returned from http server", labels, nil)
@@ -36,69 +37,53 @@ func init() {
 	dnsErrDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "dns_error"), "A DNS error occured (0 if not)", labels, nil)
 }
 
-// HttpMetricExporter exports metrics for HTTP measurement results
-type HttpMetricExporter struct {
-	ProbeId     int
-	DstAddr     string
-	Uri         string
-	ReturnCode  int
-	HttpVersion float64
-	BodySize    int
-	HeaderSize  int
-	Method      string
-	Rtt         float64
-	DnsError    int
-	Asn         int
-	IpVersion   int
-}
-
-// FromResult creates  metric exporter for HTTP measurement result
-func FromResult(r *measurement.Result) *HttpMetricExporter {
-	m := &HttpMetricExporter{ProbeId: r.PrbId(), Uri: r.Uri()}
-
-	if len(r.HttpResults()) > 0 {
-		h := r.HttpResults()[0]
-		m.fillFromHttpResult(h)
-	}
-
-	return m
-}
-
-func (m *HttpMetricExporter) fillFromHttpResult(h *http.Result) {
-	m.IpVersion = h.Af()
-	m.DstAddr = h.DstAddr()
-	m.ReturnCode = h.Res()
-	m.BodySize = h.Bsize()
-	m.HeaderSize = h.Hsize()
-	m.Method = h.Method()
-	m.HttpVersion, _ = strconv.ParseFloat(h.Ver(), 64)
-	m.Rtt = h.Rt()
-
-	if len(h.Dnserr()) > 0 {
-		m.DnsError = 1
-	}
+// HTTPMetricExporter exports metrics for HTTP measurement results
+type HTTPMetricExporter struct {
 }
 
 // Export exports metrics for Prometheus
-func (m *HttpMetricExporter) Export(ch chan<- prometheus.Metric, pk string) {
-	labelValues := []string{pk, strconv.Itoa(m.ProbeId), m.DstAddr, strconv.Itoa(m.Asn), strconv.Itoa(m.IpVersion), m.Uri, m.Method}
+func (m *HTTPMetricExporter) Export(id string, res *measurement.Result, probe *probe.Probe, ch chan<- prometheus.Metric) {
+	for _, h := range res.HttpResults() {
+		labelValues := []string{
+			id,
+			strconv.Itoa(probe.ID),
+			h.DstAddr(),
+			strconv.Itoa(probe.ASNForIPVersion(h.Af())),
+			strconv.Itoa(h.Af()),
+			res.Uri(),
+			h.Method(),
+			probe.CountryCode,
+			probe.Latitude(),
+			probe.Longitude(),
+		}
 
-	ch <- prometheus.MustNewConstMetric(resultDesc, prometheus.GaugeValue, float64(m.ReturnCode), labelValues...)
-	ch <- prometheus.MustNewConstMetric(httpVerDesc, prometheus.GaugeValue, m.HttpVersion, labelValues...)
-	ch <- prometheus.MustNewConstMetric(bodySizeDesc, prometheus.GaugeValue, float64(m.BodySize), labelValues...)
-	ch <- prometheus.MustNewConstMetric(headerSizeDesc, prometheus.GaugeValue, float64(m.HeaderSize), labelValues...)
-	ch <- prometheus.MustNewConstMetric(dnsErrDesc, prometheus.GaugeValue, float64(m.DnsError), labelValues...)
+		dnsError := 0
+		if len(h.Dnserr()) > 0 {
+			dnsError = 1
+		}
 
-	if m.Rtt > 0 {
-		ch <- prometheus.MustNewConstMetric(successDesc, prometheus.GaugeValue, 1, labelValues...)
-		ch <- prometheus.MustNewConstMetric(rttDesc, prometheus.GaugeValue, m.Rtt, labelValues...)
-	} else {
-		ch <- prometheus.MustNewConstMetric(successDesc, prometheus.GaugeValue, 0, labelValues...)
+		httpVer, err := strconv.ParseFloat(h.Ver(), 64)
+		if err != nil {
+			log.Errorf("error parsing http version %s: %v", h.Ver(), err)
+		}
+
+		ch <- prometheus.MustNewConstMetric(resultDesc, prometheus.GaugeValue, float64(h.Res()), labelValues...)
+		ch <- prometheus.MustNewConstMetric(httpVerDesc, prometheus.GaugeValue, httpVer, labelValues...)
+		ch <- prometheus.MustNewConstMetric(bodySizeDesc, prometheus.GaugeValue, float64(h.Bsize()), labelValues...)
+		ch <- prometheus.MustNewConstMetric(headerSizeDesc, prometheus.GaugeValue, float64(h.Hsize()), labelValues...)
+		ch <- prometheus.MustNewConstMetric(dnsErrDesc, prometheus.GaugeValue, float64(dnsError), labelValues...)
+
+		if h.Rt() > 0 {
+			ch <- prometheus.MustNewConstMetric(successDesc, prometheus.GaugeValue, 1, labelValues...)
+			ch <- prometheus.MustNewConstMetric(rttDesc, prometheus.GaugeValue, h.Rt(), labelValues...)
+		} else {
+			ch <- prometheus.MustNewConstMetric(successDesc, prometheus.GaugeValue, 0, labelValues...)
+		}
 	}
 }
 
 // Describe exports metric descriptions for Prometheus
-func (m *HttpMetricExporter) Describe(ch chan<- *prometheus.Desc) {
+func (m *HTTPMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- successDesc
 	ch <- resultDesc
 	ch <- httpVerDesc
@@ -108,12 +93,7 @@ func (m *HttpMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- dnsErrDesc
 }
 
-// SetAsn sets AS number for measurement result
-func (m *HttpMetricExporter) SetAsn(asn int) {
-	m.Asn = asn
-}
-
 // IsValid returns whether an result is valid or not (e.g. IPv6 measurement and Probe does not support IPv6)
-func (m *HttpMetricExporter) IsValid() bool {
-	return m.Asn > 0
+func (m *HTTPMetricExporter) IsValid(res *measurement.Result, probe *probe.Probe) bool {
+	return probe.ASNForIPVersion(res.Af()) > 0
 }

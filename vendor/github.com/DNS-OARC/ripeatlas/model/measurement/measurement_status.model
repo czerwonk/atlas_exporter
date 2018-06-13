@@ -1,0 +1,2 @@
+id (integer): Numeric ID of this status,
+name (string): Human-readable description of this status
