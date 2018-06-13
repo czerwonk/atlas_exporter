@@ -26,6 +26,7 @@ import (
     "os"
 
     "github.com/DNS-OARC/ripeatlas/measurement"
+    "github.com/DNS-OARC/ripeatlas/request"
 )
 
 // A File reads RIPE Atlas data from JSON files.
@@ -35,6 +36,10 @@ type File struct {
 // NewFile returns a new Atlaser for reading from a JSON file.
 func NewFile() *File {
     return &File{}
+}
+
+func (f *File) Measurements(p Params) (<-chan *Measurement, error) {
+    return nil, fmt.Errorf("Unimplemented")
 }
 
 // Since File can not distinguish what is the latest results,
@@ -117,4 +122,8 @@ func (f *File) MeasurementResults(p Params) (<-chan *measurement.Result, error) 
     }()
 
     return ch, nil
+}
+
+func (f *File) Probes(p Params) (<-chan *request.Probe, error) {
+    return nil, fmt.Errorf("Unimplemented")
 }

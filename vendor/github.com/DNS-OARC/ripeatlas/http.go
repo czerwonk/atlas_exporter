@@ -24,10 +24,11 @@ import (
     "fmt"
     "io"
     "net/http"
-    "net/url"
+    neturl "net/url"
     "strings"
 
     "github.com/DNS-OARC/ripeatlas/measurement"
+    "github.com/DNS-OARC/ripeatlas/request"
 )
 
 // A Http reads RIPE Atlas data from the RIPE Atlas REST API.
@@ -36,6 +37,7 @@ type Http struct {
 
 const (
     MeasurementsUrl = "https://atlas.ripe.net/api/v2/measurements"
+    ProbesUrl       = "https://atlas.ripe.net/api/v2/probes"
 )
 
 // NewHttp returns a new Atlaser for reading from the RIPE Atlas REST API.
@@ -43,7 +45,90 @@ func NewHttp() *Http {
     return &Http{}
 }
 
-func (h *Http) get(url string, fragmented bool) (<-chan *measurement.Result, error) {
+// Measurements gets the metadata of measurements, as described
+// by the Params, and sends them to the returned channel.
+//
+// Params available are:
+//
+// "page": int64 - The pagination page to read (default 1).
+//
+// "pk": string - The measurement id to read a specific measurement.
+func (h *Http) Measurements(p Params) (<-chan *Measurement, error) {
+    var qstr []string
+    var pk string
+
+    for k, v := range p {
+        switch k {
+        case "page":
+            v, ok := v.(int64)
+            if !ok {
+                return nil, fmt.Errorf("Invalid %s parameter, must be int64", k)
+            }
+            qstr = append(qstr, fmt.Sprintf("%s=%d", k, v))
+        case "pk":
+            v, ok := v.(string)
+            if !ok {
+                return nil, fmt.Errorf("Invalid %s parameter, must be string", k)
+            }
+            pk = v
+        default:
+            return nil, fmt.Errorf("Invalid parameter %s", k)
+        }
+    }
+
+    url := MeasurementsUrl
+    if pk != "" {
+        url = fmt.Sprintf("%s/%s", MeasurementsUrl, neturl.PathEscape(pk))
+    }
+    url += "?format=json"
+    if len(qstr) > 0 {
+        url += "&" + strings.Join(qstr, "&")
+    }
+
+    r, err := http.Get(url)
+    if err != nil {
+        return nil, fmt.Errorf("http.Get(%s): %s", url, err.Error())
+    }
+
+    ch := make(chan *Measurement)
+    go func() {
+        d := json.NewDecoder(r.Body)
+        defer r.Body.Close()
+
+        if pk != "" {
+            var m Measurement
+            if err := d.Decode(&m); err != nil {
+                if err != io.EOF {
+                    m := &Measurement{ParseError: fmt.Errorf("json.Decode(%s): %s", url, err.Error())}
+                    ch <- m
+                }
+            } else {
+                ch <- &m
+            }
+            close(ch)
+            return
+        }
+
+        var r struct {
+            Results []*Measurement `json:"results"`
+        }
+        if err := d.Decode(&r); err != nil {
+            if err != io.EOF {
+                m := &Measurement{ParseError: fmt.Errorf("json.Decode(%s): %s", url, err.Error())}
+                ch <- m
+            }
+        } else {
+            for _, i := range r.Results {
+                ch <- i
+            }
+        }
+        close(ch)
+    }()
+
+    return ch, nil
+}
+
+func (h *Http) getMeasurementResults(url string, fragmented bool) (<-chan *measurement.Result, error) {
     r, err := http.Get(url)
     if err != nil {
         return nil, fmt.Errorf("http.Get(%s): %s", url, err.Error())
@@ -120,14 +205,14 @@ func (h *Http) MeasurementLatest(p Params) (<-chan *measurement.Result, error) {
         return nil, fmt.Errorf("Required parameter pk missing")
     }
 
-    url := fmt.Sprintf("%s/%s/latest", MeasurementsUrl, url.PathEscape(pk))
+    url := fmt.Sprintf("%s/%s/latest", MeasurementsUrl, neturl.PathEscape(pk))
     if fragmented {
         url += "?format=txt"
     } else {
         url += "?format=json"
     }
 
-    return h.get(url, fragmented)
+    return h.getMeasurementResults(url, fragmented)
 }
 
 // MeasurementResults gets the measurement results, as described by the Params,
@@ -190,7 +275,7 @@ func (h *Http) MeasurementResults(p Params) (<-chan *measurement.Result, error) 
         return nil, fmt.Errorf("Required parameter pk missing")
     }
 
-    url := fmt.Sprintf("%s/%s/results", MeasurementsUrl, url.PathEscape(pk))
+    url := fmt.Sprintf("%s/%s/results", MeasurementsUrl, neturl.PathEscape(pk))
     if fragmented {
         url += "?format=txt"
     } else {
@@ -200,5 +285,88 @@ func (h *Http) MeasurementResults(p Params) (<-chan *measurement.Result, error) 
         url += "&" + strings.Join(qstr, "&")
     }
 
-    return h.get(url, fragmented)
+    return h.getMeasurementResults(url, fragmented)
+}
+
+// Probes gets the metadata of probes, as described by the Params, and sends
+// them to the returned channel.
+//
+// Params available are:
+//
+// "page": int64 - The pagination page to read (default 1).
+//
+// "pk": string - The probe id to read a specific probe.
+func (h *Http) Probes(p Params) (<-chan *request.Probe, error) {
+    var qstr []string
+    var pk string
+
+    for k, v := range p {
+        switch k {
+        case "page":
+            v, ok := v.(int64)
+            if !ok {
+                return nil, fmt.Errorf("Invalid %s parameter, must be int64", k)
+            }
+            qstr = append(qstr, fmt.Sprintf("%s=%d", k, v))
+        case "pk":
+            v, ok := v.(string)
+            if !ok {
+                return nil, fmt.Errorf("Invalid %s parameter, must be string", k)
+            }
+            pk = v
+        default:
+            return nil, fmt.Errorf("Invalid parameter %s", k)
+        }
+    }
+
+    url := ProbesUrl
+    if pk != "" {
+        url = fmt.Sprintf("%s/%s", ProbesUrl, neturl.PathEscape(pk))
+    }
+    url += "?format=json"
+    if len(qstr) > 0 {
+        url += "&" + strings.Join(qstr, "&")
+    }
+
+    r, err := http.Get(url)
+    if err != nil {
+        return nil, fmt.Errorf("http.Get(%s): %s", url, err.Error())
+    }
+
+    ch := make(chan *request.Probe)
+    go func() {
+        d := json.NewDecoder(r.Body)
+        defer r.Body.Close()
+
+        if pk != "" {
+            var p request.Probe
+            if err := d.Decode(&p); err != nil {
+                if err != io.EOF {
+                    p := &request.Probe{ParseError: fmt.Errorf("json.Decode(%s): %s", url, err.Error())}
+                    ch <- p
+                }
+            } else {
+                ch <- &p
+            }
+            close(ch)
+            return
+        }
+
+        var r struct {
+            Results []*request.Probe `json:"results"`
+        }
+        if err := d.Decode(&r); err != nil {
+            if err != io.EOF {
+                p := &request.Probe{ParseError: fmt.Errorf("json.Decode(%s): %s", url, err.Error())}
+                ch <- p
+            }
+        } else {
+            for _, i := range r.Results {
+                ch <- i
+            }
+        }
+        close(ch)
+    }()
+
+    return ch, nil
 }

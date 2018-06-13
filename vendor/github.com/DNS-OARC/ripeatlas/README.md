@@ -32,12 +32,19 @@ Implementation status of API calls described by https://atlas.ripe.net/docs/api/
 
 Call | Status | Func
 ---- | ------ | -----
+/api/v2/measurements/ | HTTP only | Atlaser.Measurements()
+/api/v2/measurements/{pk} | HTTP only | Atlaser.Measurements()
 /api/v2/measurements/{pk}/latest/ | Done | Atlaser.MeasurementLatest()
 /api/v2/measurements/{pk}/results/ | Done | Atlaser.MeasurementResults()
 
 ### participation-requests
 
 ### probes
+
+Call | Status | Func
+---- | ------ | -----
+/api/v2/probes/ | HTTP only | Atlaser.Probes()
+/api/v2/probes/{pk} | HTTP only | Atlaser.Probes()
 
 ## Objects
 
@@ -54,6 +61,8 @@ sslcert | 4610 to 4760 | Done
 wifi | 4610 to 4760 | Done (undocumented by RIPE)
 
 ## Usage
+
+See or test more complete examples in the [examples directory](https://github.com/DNS-OARC/ripeatlas/tree/master/examples).
 
 ```go
 import (
