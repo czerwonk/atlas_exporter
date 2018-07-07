@@ -1,4 +1,4 @@
-package main
+package atlas
 
 import (
 	"time"
@@ -9,9 +9,10 @@ import (
 
 var cache *probe.ProbeCache
 
-func initCache() {
-	cache = probe.NewCache(time.Duration(*cacheTTL) * time.Second)
-	startCacheCleanupFunc(time.Duration(*cacheCleanUp) * time.Second)
+// InitCache initializes the cache
+func InitCache(ttl, cleanup time.Duration) {
+	cache = probe.NewCache(ttl)
+	startCacheCleanupFunc(cleanup)
 }
 
 func startCacheCleanupFunc(d time.Duration) {

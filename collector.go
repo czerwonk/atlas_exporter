@@ -1,15 +1,16 @@
 package main
 
 import (
+	"github.com/czerwonk/atlas_exporter/atlas"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 type collector struct {
-	measurements  []*atlasMeasurement
+	measurements  []*atlas.AtlasMeasurement
 	filterInvalid bool
 }
 
-func newCollector(measurements []*atlasMeasurement, filterInvalid bool) *collector {
+func newCollector(measurements []*atlas.AtlasMeasurement, filterInvalid bool) *collector {
 	return &collector{
 		measurements:  measurements,
 		filterInvalid: filterInvalid,
@@ -19,14 +20,14 @@ func newCollector(measurements []*atlasMeasurement, filterInvalid bool) *collect
 // Collect implements Prometheus Collector interface
 func (c *collector) Collect(ch chan<- prometheus.Metric) {
 	for _, m := range c.measurements {
-		for _, res := range m.results {
-			probe := m.probes[res.PrbId()]
+		for _, res := range m.Results {
+			probe := m.Probes[res.PrbId()]
 
-			if c.filterInvalid && !m.exporter.IsValid(res, probe) {
+			if c.filterInvalid && !m.Exporter.IsValid(res, probe) {
 				continue
 			}
 
-			m.exporter.Export(m.id, res, probe, ch)
+			m.Exporter.Export(m.ID, res, probe, ch)
 		}
 	}
 }
@@ -34,6 +35,6 @@ func (c *collector) Collect(ch chan<- prometheus.Metric) {
 // Describe implements Prometheus Collector interface
 func (c *collector) Describe(ch chan<- *prometheus.Desc) {
 	for _, m := range c.measurements {
-		m.exporter.Describe(ch)
+		m.Exporter.Describe(ch)
 	}
 }
