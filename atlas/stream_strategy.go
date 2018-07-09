@@ -3,6 +3,7 @@ package atlas
 import (
 	"context"
 	"strconv"
+	"sync"
 
 	"github.com/DNS-OARC/ripeatlas/measurement"
 
@@ -11,8 +12,9 @@ import (
 
 type streamingStrategy struct {
 	stream  *ripeatlas.Stream
-	results map[string][]*measurement.Result
+	results map[string]map[int]*measurement.Result
 	workers uint
+	mu      sync.RWMutex
 }
 
 // NewStreamingStrategy returns an strategy using the RIPE Atlas Streaming API
@@ -20,7 +22,7 @@ func NewStreamingStrategy(ctx context.Context, ids []string, workers uint) (Stra
 	s := &streamingStrategy{
 		stream:  ripeatlas.NewStream(),
 		workers: workers,
-		results: make(map[string][]*measurement.Result),
+		results: make(map[string]map[int]*measurement.Result),
 	}
 
 	err := s.start(ctx, ids)
@@ -55,25 +57,50 @@ func (s *streamingStrategy) listenForResults(ctx context.Context, ch <-chan *mea
 	for {
 		select {
 		case m := <-ch:
-			msm := strconv.Itoa(m.MsmId())
-			res := s.results[msm]
-			s.results[msm] = append(res, m)
+			s.addOrReplace(m)
 		case <-ctx.Done():
 			return
 		}
 	}
 }
 
+func (s *streamingStrategy) addOrReplace(m *measurement.Result) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	msm := strconv.Itoa(m.MsmId())
+
+	_, found := s.results[msm]
+	if !found {
+		s.results[msm] = make(map[int]*measurement.Result)
+	}
+
+	s.results[msm][m.PrbId()] = m
+}
+
 func (s *streamingStrategy) MeasurementResults(ctx context.Context, ids []string) ([]*AtlasMeasurement, error) {
-	res := make([]*AtlasMeasurement, 0)
-	for k, v := range s.results {
-		r, err := atlasMeasurementForResults(v, k, s.workers)
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	measurements := make([]*AtlasMeasurement, 0)
+	for _, id := range ids {
+		m, found := s.results[id]
+		if !found {
+			continue
+		}
+
+		res := make([]*measurement.Result, 0)
+		for _, v := range m {
+			res = append(res, v)
+		}
+
+		r, err := atlasMeasurementForResults(res, id, s.workers)
 		if err != nil {
 			return nil, err
 		}
 
-		res = append(res, r)
+		measurements = append(measurements, r)
 	}
 
-	return res, nil
+	return measurements, nil
 }
