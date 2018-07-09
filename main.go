@@ -10,13 +10,14 @@ import (
 	"os"
 	"time"
 
+	"github.com/czerwonk/atlas_exporter/atlas"
 	"github.com/czerwonk/atlas_exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/log"
 )
 
-const version string = "0.7.0"
+const version string = "0.8.0"
 
 var (
 	showVersion          = flag.Bool("version", false, "Print version information.")
@@ -27,8 +28,10 @@ var (
 	cacheCleanUp         = flag.Int("cache.cleanup", 300, "Interval for cache clean up in seconds")
 	configFile           = flag.String("config.file", "", "Path to congig file to use")
 	timeout              = flag.Duration("timeout", 60*time.Second, "Timeout")
-	workerCount          = flag.Int("worker.count", 8, "Number of go routines retrieving probe information")
+	workerCount          = flag.Uint("worker.count", 8, "Number of go routines retrieving probe information")
+	streaming            = flag.Bool("streaming", true, "Retrieve data by subscribing to Atlas Streaming API")
 	cfg                  *config.Config
+	strategy             atlas.Strategy
 )
 
 func init() {
@@ -51,6 +54,19 @@ func main() {
 	if err != nil {
 		log.Error(err)
 		os.Exit(1)
+	}
+
+	if *streaming {
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		strategy, err = atlas.NewStreamingStrategy(ctx, cfg.Measurements, *workerCount)
+		if err != nil {
+			log.Error(err)
+			os.Exit(2)
+		}
+
+	} else {
+		strategy = atlas.NewRequestStrategy(*workerCount)
 	}
 
 	startServer()
@@ -105,7 +121,7 @@ func startServer() {
 
 	log.Infof("Cache TTL: %v\n", time.Duration(*cacheTTL)*time.Second)
 	log.Infof("Cache cleanup interval (seconds): %v\n", time.Duration(*cacheCleanUp)*time.Second)
-	initCache()
+	atlas.InitCache(time.Duration(*cacheTTL)*time.Second, time.Duration(*cacheCleanUp)*time.Second)
 
 	log.Infof("Listening for %s on %s\n", *metricsPath, *listenAddress)
 	log.Fatal(http.ListenAndServe(*listenAddress, nil))
@@ -125,9 +141,12 @@ func errorHandler(f func(http.ResponseWriter, *http.Request) error) http.Handler
 func handleMetricsRequest(w http.ResponseWriter, r *http.Request) error {
 	id := r.URL.Query().Get("measurement_id")
 
+	s := strategy
+
 	ids := []string{}
 	if len(id) > 0 {
 		ids = append(ids, id)
+		s = atlas.NewRequestStrategy(*workerCount)
 	} else {
 		ids = append(ids, cfg.Measurements...)
 	}
@@ -139,7 +158,7 @@ func handleMetricsRequest(w http.ResponseWriter, r *http.Request) error {
 	ctx, cancel := context.WithTimeout(context.Background(), *timeout)
 	defer cancel()
 
-	measurements, err := getMeasurements(ctx, ids)
+	measurements, err := s.MeasurementResults(ctx, ids)
 	if err != nil {
 		return err
 	}

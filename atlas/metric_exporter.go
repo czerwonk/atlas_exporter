@@ -1,4 +1,4 @@
-package main
+package atlas
 
 import (
 	"github.com/DNS-OARC/ripeatlas/measurement"
