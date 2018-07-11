@@ -3,7 +3,9 @@ package atlas
 import (
 	"context"
 	"strconv"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/DNS-OARC/ripeatlas/measurement"
 	"github.com/prometheus/common/log"
@@ -11,59 +13,97 @@ import (
 	"github.com/DNS-OARC/ripeatlas"
 )
 
+const ConnectionRetryInterval = 30 * time.Second
+
 type streamingStrategy struct {
 	stream  *ripeatlas.Stream
 	results map[string]map[int]*measurement.Result
 	workers uint
+	timeout time.Duration
 	mu      sync.RWMutex
 }
 
 // NewStreamingStrategy returns an strategy using the RIPE Atlas Streaming API
-func NewStreamingStrategy(ctx context.Context, ids []string, workers uint) (Strategy, error) {
+func NewStreamingStrategy(ctx context.Context, ids []string, workers uint, timeout time.Duration) Strategy {
 	s := &streamingStrategy{
 		stream:  ripeatlas.NewStream(),
 		workers: workers,
+		timeout: timeout,
 		results: make(map[string]map[int]*measurement.Result),
 	}
 
-	err := s.start(ctx, ids)
+	s.start(ctx, ids)
+	return s
+}
+
+func (s *streamingStrategy) start(ctx context.Context, ids []string) {
+	for _, id := range ids {
+		go s.startListening(ctx, id)
+	}
+}
+
+func (s *streamingStrategy) startListening(ctx context.Context, id string) {
+	for {
+		ch, err := s.subscribe(id)
+		if err != nil {
+			log.Error(err)
+		} else {
+			log.Infof("Subscribed to results of measurement #%s", id)
+			s.listenForResults(ctx, ch)
+		}
+
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(ConnectionRetryInterval):
+			delete(s.results, id)
+			continue
+		}
+	}
+}
+
+func (s *streamingStrategy) subscribe(id string) (<-chan *measurement.Result, error) {
+	msm, err := strconv.Atoi(id)
 	if err != nil {
 		return nil, err
 	}
 
-	return s, nil
-}
-
-func (s *streamingStrategy) start(ctx context.Context, ids []string) error {
-	for _, id := range ids {
-		msm, err := strconv.Atoi(id)
-		if err != nil {
-			return err
-		}
-
-		ch, err := s.stream.MeasurementResults(ripeatlas.Params{
-			"msm": msm,
-		})
-		if err != nil {
-			return err
-		}
-
-		go s.listenForResults(ctx, ch)
+	ch, err := s.stream.MeasurementResults(ripeatlas.Params{
+		"msm": msm,
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	return ch, nil
 }
 
 func (s *streamingStrategy) listenForResults(ctx context.Context, ch <-chan *measurement.Result) {
 	for {
 		select {
 		case m := <-ch:
-			go s.warmProbeCache(m)
-			s.addOrReplace(m)
+			if m.ParseError != nil {
+				log.Error(m.ParseError)
+			}
+
+			if m.ParseError != nil && strings.HasPrefix(m.ParseError.Error(), "c.On(disconnect)") {
+				log.Error(m.ParseError)
+				return
+			}
+
+			s.processMeasurement(m)
+		case <-time.After(s.timeout):
+			log.Errorf("Timeout reached. Trying to reconnect.")
+			return
 		case <-ctx.Done():
 			return
 		}
 	}
+}
+
+func (s *streamingStrategy) processMeasurement(m *measurement.Result) {
+	go s.warmProbeCache(m)
+	s.addOrReplace(m)
 }
 
 func (s *streamingStrategy) warmProbeCache(m *measurement.Result) {

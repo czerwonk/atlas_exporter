@@ -30,6 +30,7 @@ var (
 	timeout              = flag.Duration("timeout", 60*time.Second, "Timeout")
 	workerCount          = flag.Uint("worker.count", 8, "Number of go routines retrieving probe information")
 	streaming            = flag.Bool("streaming", true, "Retrieve data by subscribing to Atlas Streaming API")
+	streamingTimeout     = flag.Duration("streaming.timeout", 5*time.Minute, "When no update is received in this timespan a reconnect is initiated.")
 	cfg                  *config.Config
 	strategy             atlas.Strategy
 )
@@ -59,12 +60,7 @@ func main() {
 	if *streaming {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		strategy, err = atlas.NewStreamingStrategy(ctx, cfg.Measurements, *workerCount)
-		if err != nil {
-			log.Error(err)
-			os.Exit(2)
-		}
-
+		strategy = atlas.NewStreamingStrategy(ctx, cfg.Measurements, *workerCount, *streamingTimeout)
 	} else {
 		strategy = atlas.NewRequestStrategy(*workerCount)
 	}
