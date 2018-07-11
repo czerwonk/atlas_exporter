@@ -25,12 +25,13 @@ docker run -d --restart unless-stopped -p 9400:9400 czerwonk/atlas_exporter
 ```
 ./atlas_exporter
 ```
-or using config file mode
+or using config file mode:
 ```
 ./atlas_exporter -config.file config.yml
 ```
 
 ### Config file
+for this example we want to retrieve results for measurement 8772164
 ```YAML
 measurements:
   - 8772164
