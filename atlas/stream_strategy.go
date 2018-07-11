@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/DNS-OARC/ripeatlas/measurement"
+	"github.com/prometheus/common/log"
 
 	"github.com/DNS-OARC/ripeatlas"
 )
@@ -57,10 +58,18 @@ func (s *streamingStrategy) listenForResults(ctx context.Context, ch <-chan *mea
 	for {
 		select {
 		case m := <-ch:
+			go s.warmProbeCache(m)
 			s.addOrReplace(m)
 		case <-ctx.Done():
 			return
 		}
+	}
+}
+
+func (s *streamingStrategy) warmProbeCache(m *measurement.Result) {
+	_, err := probeForID(m.PrbId())
+	if err != nil {
+		log.Error(err)
 	}
 }
 

@@ -79,7 +79,12 @@ func startConsumers(idChan chan int, out chan<- *probe.Probe, errCh chan<- error
 		go func() {
 			defer wg.Done()
 			for id := range idChan {
-				probeForID(id, out, errCh)
+				p, err := probeForID(id)
+				if err != nil {
+					errCh <- err
+					continue
+				}
+				out <- p
 			}
 		}()
 	}
@@ -88,21 +93,19 @@ func startConsumers(idChan chan int, out chan<- *probe.Probe, errCh chan<- error
 	close(out)
 }
 
-func probeForID(id int, ch chan<- *probe.Probe, errCh chan<- error) {
+func probeForID(id int) (*probe.Probe, error) {
 	p, found := cache.Get(id)
 	if found {
-		ch <- p
-		return
+		return p, nil
 	}
 
 	p, err := probe.Get(id)
 	if err != nil {
-		errCh <- fmt.Errorf("could not retrieve probe information for probe %d: %v", id, err)
-		return
+		return nil, fmt.Errorf("could not retrieve probe information for probe %d: %v", id, err)
 	}
 
 	cache.Add(id, p)
-	ch <- p
+	return p, nil
 }
 
 func exporterForType(t string) (MetricExporter, error) {

@@ -42,6 +42,7 @@ func (c *ProbeCache) Add(id int, p *Probe) {
 	c.cache[id] = &cacheItem{expires: time.Now().Add(c.ttl), value: p}
 }
 
+// CleanUp removes expired cache items
 func (c *ProbeCache) CleanUp() int {
 	expired := make([]int, 0)
 

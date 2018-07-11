@@ -5,6 +5,7 @@ import (
 	"github.com/czerwonk/atlas_exporter/probe"
 )
 
+// AtlasMeasurement contains all measurement results for one measurement including probe information
 type AtlasMeasurement struct {
 	ID       string
 	Results  []*measurement.Result
