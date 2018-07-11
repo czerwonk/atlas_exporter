@@ -25,13 +25,27 @@ docker run -d --restart unless-stopped -p 9400:9400 czerwonk/atlas_exporter
 ```
 ./atlas_exporter
 ```
+or using config file mode
+```
+./atlas_exporter -config.file config.yml
+```
+
+### Config file
+```YAML
+measurements:
+  - 8772164
+ ```
 
 ### Call metrics URI
-for measurement with id 8772164:
+when using config file mode:
+```
+curl http://127.0.0.1:9400/metrics
+```
+or ad hoc for measuremnt 8772164:
 ```
 curl http://127.0.0.1:9400/metrics?measurement_id=8772164
 ```
-the result should look similar to this one:
+in both cases the result should look similar to this one:
 ``` 
 # HELP atlas_traceroute_hops Number of hops
 # TYPE atlas_traceroute_hops gauge
