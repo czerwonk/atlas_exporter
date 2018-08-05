@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/DNS-OARC/ripeatlas/measurement"
+	"github.com/czerwonk/atlas_exporter/exporter"
 	"github.com/czerwonk/atlas_exporter/probe"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -15,6 +16,7 @@ const (
 
 var (
 	labels         []string
+	rttHistDesc    *prometheus.Desc
 	successDesc    *prometheus.Desc
 	minLatencyDesc *prometheus.Desc
 	maxLatencyDesc *prometheus.Desc
@@ -26,13 +28,32 @@ var (
 	sizeDesc       *prometheus.Desc
 )
 
-// PingMetricExporter exports metrics for PING measurement results
-type PingMetricExporter struct {
+type pingMetricExporter struct {
+	id      string
+	rttHist prometheus.Histogram
+}
+
+// NewExporter creates a exporter for PING measurement results
+func NewExporter(id string) exporter.MetricExporter {
+	hist := prometheus.NewHistogram(prometheus.HistogramOpts{
+		Namespace: ns,
+		Subsystem: sub,
+		Name:      "rtt_hist",
+		Buckets:   prometheus.LinearBuckets(10, 10, 100),
+		Help:      "Histogram of round trip times over all ICMP requests",
+		ConstLabels: prometheus.Labels{
+			"measurement": id,
+		},
+	})
+
+	return &pingMetricExporter{
+		id:      id,
+		rttHist: hist,
+	}
 }
 
 func init() {
 	labels = []string{"measurement", "probe", "dst_addr", "dst_name", "asn", "ip_version", "country_code", "lat", "long"}
-
 	successDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "success"), "Destination was reachable", labels, nil)
 	minLatencyDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "min_latency"), "Minimum latency", labels, nil)
 	maxLatencyDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "max_latency"), "Maximum latency", labels, nil)
@@ -45,9 +66,9 @@ func init() {
 }
 
 // Export exports a prometheus metric
-func (m *PingMetricExporter) Export(id string, res *measurement.Result, probe *probe.Probe, ch chan<- prometheus.Metric) {
+func (m *pingMetricExporter) Export(res *measurement.Result, probe *probe.Probe, ch chan<- prometheus.Metric) {
 	labelValues := []string{
-		id,
+		m.id,
 		strconv.Itoa(probe.ID),
 		res.DstAddr(),
 		res.DstName(),
@@ -74,8 +95,21 @@ func (m *PingMetricExporter) Export(id string, res *measurement.Result, probe *p
 	ch <- prometheus.MustNewConstMetric(sizeDesc, prometheus.GaugeValue, float64(res.Size()), labelValues...)
 }
 
+// ExportHistograms exports aggregated metrics for the measurement
+func (m *pingMetricExporter) ExportHistograms(res []*measurement.Result, ch chan<- prometheus.Metric) {
+	for _, r := range res {
+		for _, p := range r.PingResults() {
+			if p.Rtt() > 0 {
+				m.rttHist.Observe(p.Rtt())
+			}
+		}
+	}
+
+	m.rttHist.Collect(ch)
+}
+
 // Describe exports metric descriptions for Prometheus
-func (m *PingMetricExporter) Describe(ch chan<- *prometheus.Desc) {
+func (m *pingMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- successDesc
 	ch <- minLatencyDesc
 	ch <- maxLatencyDesc
@@ -85,9 +119,10 @@ func (m *PingMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- dupDesc
 	ch <- ttlDesc
 	ch <- sizeDesc
+	ch <- m.rttHist.Desc()
 }
 
 // IsValid returns whether an result is valid or not (e.g. IPv6 measurement and Probe does not support IPv6)
-func (m *PingMetricExporter) IsValid(res *measurement.Result, probe *probe.Probe) bool {
+func (m *pingMetricExporter) IsValid(res *measurement.Result, probe *probe.Probe) bool {
 	return probe.ASNForIPVersion(res.Af()) > 0
 }

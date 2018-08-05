@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/DNS-OARC/ripeatlas/measurement"
+	"github.com/czerwonk/atlas_exporter/exporter"
 	"github.com/czerwonk/atlas_exporter/probe"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -28,14 +29,19 @@ func init() {
 	rttDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "rtt"), "Round trip time in ms", labels, nil)
 }
 
-// TracerouteMetricExporter exports metrics for traceroute measurement results
-type TracerouteMetricExporter struct {
+type tracerouteMetricExporter struct {
+	id string
+}
+
+// NewExporter creates a exporter for traceroute measurement results
+func NewExporter(id string) exporter.MetricExporter {
+	return &tracerouteMetricExporter{id}
 }
 
 // Export exports a prometheus metric
-func (m *TracerouteMetricExporter) Export(id string, res *measurement.Result, probe *probe.Probe, ch chan<- prometheus.Metric) {
+func (m *tracerouteMetricExporter) Export(res *measurement.Result, probe *probe.Probe, ch chan<- prometheus.Metric) {
 	labelValues := []string{
-		id,
+		m.id,
 		strconv.Itoa(probe.ID),
 		res.DstAddr(),
 		res.DstName(),
@@ -57,6 +63,11 @@ func (m *TracerouteMetricExporter) Export(id string, res *measurement.Result, pr
 	}
 }
 
+// ExportHistograms exports aggregated metrics for the measurement
+func (m *tracerouteMetricExporter) ExportHistograms(res []*measurement.Result, ch chan<- prometheus.Metric) {
+
+}
+
 func processLastHop(r *measurement.Result) (success float64, rtt float64) {
 	if len(r.TracerouteResults()) == 0 {
 		return success, rtt
@@ -74,13 +85,13 @@ func processLastHop(r *measurement.Result) (success float64, rtt float64) {
 }
 
 // Describe exports metric descriptions for Prometheus
-func (m *TracerouteMetricExporter) Describe(ch chan<- *prometheus.Desc) {
+func (m *tracerouteMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- successDesc
 	ch <- hopDesc
 	ch <- rttDesc
 }
 
 // IsValid returns whether an result is valid or not (e.g. IPv6 measurement and Probe does not support IPv6)
-func (m *TracerouteMetricExporter) IsValid(res *measurement.Result, probe *probe.Probe) bool {
+func (m *tracerouteMetricExporter) IsValid(res *measurement.Result, probe *probe.Probe) bool {
 	return probe.ASNForIPVersion(res.Af()) > 0 && len(res.TracerouteResults()) > 1
 }

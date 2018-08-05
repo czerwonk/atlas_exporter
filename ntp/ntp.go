@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/DNS-OARC/ripeatlas/measurement"
+	"github.com/czerwonk/atlas_exporter/exporter"
 	"github.com/czerwonk/atlas_exporter/probe"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -32,14 +33,19 @@ func init() {
 	ntpVersionDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "ntp_version"), "NTP Version", labels, nil)
 }
 
-// NTPMetricExporter exports metrics for NTP measurement results
-type NTPMetricExporter struct {
+type ntpMetricExporter struct {
+	id string
+}
+
+// NewExporter creates a exporter for NTP measurement results
+func NewExporter(id string) exporter.MetricExporter {
+	return &ntpMetricExporter{id}
 }
 
 // Export exports a prometheus metric
-func (m *NTPMetricExporter) Export(id string, res *measurement.Result, probe *probe.Probe, ch chan<- prometheus.Metric) {
+func (m *ntpMetricExporter) Export(res *measurement.Result, probe *probe.Probe, ch chan<- prometheus.Metric) {
 	labelValues := []string{
-		id,
+		m.id,
 		strconv.Itoa(probe.ID),
 		res.DstAddr(),
 		res.DstName(),
@@ -57,8 +63,13 @@ func (m *NTPMetricExporter) Export(id string, res *measurement.Result, probe *pr
 	ch <- prometheus.MustNewConstMetric(ntpVersionDesc, prometheus.GaugeValue, float64(res.Version()), labelValues...)
 }
 
+// ExportHistograms exports aggregated metrics for the measurement
+func (m *ntpMetricExporter) ExportHistograms(res []*measurement.Result, ch chan<- prometheus.Metric) {
+
+}
+
 // Describe exports metric descriptions for Prometheus
-func (m *NTPMetricExporter) Describe(ch chan<- *prometheus.Desc) {
+func (m *ntpMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- pollDesc
 	ch <- precisionDesc
 	ch <- roolDelayDesc
@@ -67,6 +78,6 @@ func (m *NTPMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 }
 
 // IsValid returns whether an result is valid or not (e.g. IPv6 measurement and Probe does not support IPv6)
-func (m *NTPMetricExporter) IsValid(res *measurement.Result, probe *probe.Probe) bool {
+func (m *ntpMetricExporter) IsValid(res *measurement.Result, probe *probe.Probe) bool {
 	return probe.ASNForIPVersion(res.Af()) > 0
 }

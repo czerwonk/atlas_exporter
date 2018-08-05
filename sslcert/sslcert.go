@@ -3,6 +3,8 @@ package sslcert
 import (
 	"strconv"
 
+	"github.com/czerwonk/atlas_exporter/exporter"
+
 	"github.com/DNS-OARC/ripeatlas/measurement"
 	"github.com/czerwonk/atlas_exporter/probe"
 	"github.com/prometheus/client_golang/prometheus"
@@ -32,14 +34,19 @@ func init() {
 	alertDescriptionDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "alert_description"), "Description for the alert level (see RIPIE Atlas documentation)", labels, nil)
 }
 
-// SslCertMetricExporter exports metrics for SSL certificate measurement results
-type SslCertMetricExporter struct {
+type sslCertMetricExporter struct {
+	id string
+}
+
+// NewExporter creates a exporter for SSL measurement results
+func NewExporter(id string) exporter.MetricExporter {
+	return &sslCertMetricExporter{id}
 }
 
 // Export exports a prometheus metric
-func (m *SslCertMetricExporter) Export(id string, res *measurement.Result, probe *probe.Probe, ch chan<- prometheus.Metric) {
+func (m *sslCertMetricExporter) Export(res *measurement.Result, probe *probe.Probe, ch chan<- prometheus.Metric) {
 	labelValues := []string{
-		id,
+		m.id,
 		strconv.Itoa(probe.ID),
 		res.DstAddr(),
 		strconv.Itoa(probe.ASNForIPVersion(res.Af())),
@@ -68,8 +75,13 @@ func (m *SslCertMetricExporter) Export(id string, res *measurement.Result, probe
 	}
 }
 
+// ExportHistograms exports aggregated metrics for the measurement
+func (m *sslCertMetricExporter) ExportHistograms(res []*measurement.Result, ch chan<- prometheus.Metric) {
+
+}
+
 // Describe exports metric descriptions for Prometheus
-func (m *SslCertMetricExporter) Describe(ch chan<- *prometheus.Desc) {
+func (m *sslCertMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- successDesc
 	ch <- rttDesc
 	ch <- sslVerDesc
@@ -78,6 +90,6 @@ func (m *SslCertMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 }
 
 // IsValid returns whether an result is valid or not (e.g. IPv6 measurement and Probe does not support IPv6)
-func (m *SslCertMetricExporter) IsValid(res *measurement.Result, probe *probe.Probe) bool {
+func (m *sslCertMetricExporter) IsValid(res *measurement.Result, probe *probe.Probe) bool {
 	return probe.ASNForIPVersion(res.Af()) > 0
 }

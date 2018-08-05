@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/DNS-OARC/ripeatlas/measurement"
+	"github.com/czerwonk/atlas_exporter/exporter"
 	"github.com/czerwonk/atlas_exporter/probe"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
@@ -37,15 +38,35 @@ func init() {
 	dnsErrDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "dns_error"), "A DNS error occured (0 if not)", labels, nil)
 }
 
-// HTTPMetricExporter exports metrics for HTTP measurement results
-type HTTPMetricExporter struct {
+type httpMetricExporter struct {
+	id      string
+	rttHist prometheus.Histogram
+}
+
+// NewExporter creates a exporter for HTTP measurement results
+func NewExporter(id string) exporter.MetricExporter {
+	hist := prometheus.NewHistogram(prometheus.HistogramOpts{
+		Namespace: ns,
+		Subsystem: sub,
+		Name:      "rtt_hist",
+		Buckets:   prometheus.LinearBuckets(100, 100, 100),
+		Help:      "Histogram of round trip times over all HTTP requests",
+		ConstLabels: prometheus.Labels{
+			"measurement": id,
+		},
+	})
+
+	return &httpMetricExporter{
+		id:      id,
+		rttHist: hist,
+	}
 }
 
 // Export exports metrics for Prometheus
-func (m *HTTPMetricExporter) Export(id string, res *measurement.Result, probe *probe.Probe, ch chan<- prometheus.Metric) {
+func (m *httpMetricExporter) Export(res *measurement.Result, probe *probe.Probe, ch chan<- prometheus.Metric) {
 	for _, h := range res.HttpResults() {
 		labelValues := []string{
-			id,
+			m.id,
 			strconv.Itoa(probe.ID),
 			h.DstAddr(),
 			strconv.Itoa(probe.ASNForIPVersion(h.Af())),
@@ -82,8 +103,21 @@ func (m *HTTPMetricExporter) Export(id string, res *measurement.Result, probe *p
 	}
 }
 
+// ExportHistograms exports aggregated metrics for the measurement
+func (m *httpMetricExporter) ExportHistograms(res []*measurement.Result, ch chan<- prometheus.Metric) {
+	for _, r := range res {
+		for _, p := range r.HttpResults() {
+			if p.Rt() > 0 {
+				m.rttHist.Observe(p.Rt())
+			}
+		}
+	}
+
+	m.rttHist.Collect(ch)
+}
+
 // Describe exports metric descriptions for Prometheus
-func (m *HTTPMetricExporter) Describe(ch chan<- *prometheus.Desc) {
+func (m *httpMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- successDesc
 	ch <- resultDesc
 	ch <- httpVerDesc
@@ -91,9 +125,10 @@ func (m *HTTPMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- headerSizeDesc
 	ch <- rttDesc
 	ch <- dnsErrDesc
+	ch <- m.rttHist.Desc()
 }
 
 // IsValid returns whether an result is valid or not (e.g. IPv6 measurement and Probe does not support IPv6)
-func (m *HTTPMetricExporter) IsValid(res *measurement.Result, probe *probe.Probe) bool {
+func (m *httpMetricExporter) IsValid(res *measurement.Result, probe *probe.Probe) bool {
 	return probe.ASNForIPVersion(res.Af()) > 0
 }

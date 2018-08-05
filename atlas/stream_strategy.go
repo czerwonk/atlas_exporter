@@ -17,7 +17,7 @@ const ConnectionRetryInterval = 30 * time.Second
 
 type streamingStrategy struct {
 	stream  *ripeatlas.Stream
-	results map[string]map[int]*measurement.Result
+	results map[string][]*measurement.Result
 	workers uint
 	timeout time.Duration
 	mu      sync.RWMutex
@@ -29,7 +29,7 @@ func NewStreamingStrategy(ctx context.Context, ids []string, workers uint, timeo
 		stream:  ripeatlas.NewStream(),
 		workers: workers,
 		timeout: timeout,
-		results: make(map[string]map[int]*measurement.Result),
+		results: make(map[string][]*measurement.Result),
 	}
 
 	s.start(ctx, ids)
@@ -103,7 +103,7 @@ func (s *streamingStrategy) listenForResults(ctx context.Context, ch <-chan *mea
 
 func (s *streamingStrategy) processMeasurement(m *measurement.Result) {
 	go s.warmProbeCache(m)
-	s.addOrReplace(m)
+	s.add(m)
 }
 
 func (s *streamingStrategy) warmProbeCache(m *measurement.Result) {
@@ -113,7 +113,7 @@ func (s *streamingStrategy) warmProbeCache(m *measurement.Result) {
 	}
 }
 
-func (s *streamingStrategy) addOrReplace(m *measurement.Result) {
+func (s *streamingStrategy) add(m *measurement.Result) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -121,10 +121,10 @@ func (s *streamingStrategy) addOrReplace(m *measurement.Result) {
 
 	_, found := s.results[msm]
 	if !found {
-		s.results[msm] = make(map[int]*measurement.Result)
+		s.results[msm] = make([]*measurement.Result, 0)
 	}
 
-	s.results[msm][m.PrbId()] = m
+	s.results[msm] = append(s.results[msm], m)
 }
 
 func (s *streamingStrategy) MeasurementResults(ctx context.Context, ids []string) ([]*AtlasMeasurement, error) {
@@ -133,15 +133,11 @@ func (s *streamingStrategy) MeasurementResults(ctx context.Context, ids []string
 
 	measurements := make([]*AtlasMeasurement, 0)
 	for _, id := range ids {
-		m, found := s.results[id]
+		res, found := s.results[id]
 		if !found {
 			continue
 		}
-
-		res := make([]*measurement.Result, 0)
-		for _, v := range m {
-			res = append(res, v)
-		}
+		delete(s.results, id)
 
 		r, err := atlasMeasurementForResults(res, id, s.workers)
 		if err != nil {

@@ -3,6 +3,7 @@ package dns
 import (
 	"strconv"
 
+	"github.com/czerwonk/atlas_exporter/exporter"
 	"github.com/czerwonk/atlas_exporter/probe"
 
 	"github.com/DNS-OARC/ripeatlas/measurement"
@@ -27,14 +28,34 @@ func init() {
 	rttDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "rtt"), "Roundtrip time in ms", labels, nil)
 }
 
-// DNSMetricExporter exports metrics for DNS measurement results
-type DNSMetricExporter struct {
+type dnsMetricExporter struct {
+	id      string
+	rttHist prometheus.Histogram
+}
+
+// NewExporter creates a exporter for DNS measurement results
+func NewExporter(id string) exporter.MetricExporter {
+	hist := prometheus.NewHistogram(prometheus.HistogramOpts{
+		Namespace: ns,
+		Subsystem: sub,
+		Name:      "rtt_hist",
+		Buckets:   prometheus.LinearBuckets(10, 10, 100),
+		Help:      "Histogram of round trip times over all DNS requests",
+		ConstLabels: prometheus.Labels{
+			"measurement": id,
+		},
+	})
+
+	return &dnsMetricExporter{
+		id:      id,
+		rttHist: hist,
+	}
 }
 
 // Export exports a prometheus metric
-func (m *DNSMetricExporter) Export(id string, res *measurement.Result, probe *probe.Probe, ch chan<- prometheus.Metric) {
+func (m *dnsMetricExporter) Export(res *measurement.Result, probe *probe.Probe, ch chan<- prometheus.Metric) {
 	labelValues := []string{
-		id,
+		m.id,
 		strconv.Itoa(probe.ID),
 		res.DstAddr(),
 		strconv.Itoa(probe.ASNForIPVersion(res.Af())),
@@ -57,13 +78,29 @@ func (m *DNSMetricExporter) Export(id string, res *measurement.Result, probe *pr
 	}
 }
 
+// ExportHistograms exports aggregated metrics for the measurement
+func (m *dnsMetricExporter) ExportHistograms(res []*measurement.Result, ch chan<- prometheus.Metric) {
+	for _, r := range res {
+		if r.DnsResult() == nil {
+			continue
+		}
+
+		if r.DnsResult().Rt() > 0 {
+			m.rttHist.Observe(r.DnsResult().Rt())
+		}
+	}
+
+	m.rttHist.Collect(ch)
+}
+
 // Describe exports metric descriptions for Prometheus
-func (m *DNSMetricExporter) Describe(ch chan<- *prometheus.Desc) {
+func (m *dnsMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- successDesc
 	ch <- rttDesc
+	ch <- m.rttHist.Desc()
 }
 
 // IsValid returns whether an result is valid or not (e.g. IPv6 measurement and Probe does not support IPv6)
-func (m *DNSMetricExporter) IsValid(res *measurement.Result, probe *probe.Probe) bool {
+func (m *dnsMetricExporter) IsValid(res *measurement.Result, probe *probe.Probe) bool {
 	return probe.ASNForIPVersion(res.Af()) > 0
 }

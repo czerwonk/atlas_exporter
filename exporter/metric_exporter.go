@@ -1,4 +1,4 @@
-package atlas
+package exporter
 
 import (
 	"github.com/DNS-OARC/ripeatlas/measurement"
@@ -10,7 +10,10 @@ import (
 type MetricExporter interface {
 
 	// Export exports a prometheus metric
-	Export(id string, res *measurement.Result, probe *probe.Probe, ch chan<- prometheus.Metric)
+	Export(res *measurement.Result, probe *probe.Probe, ch chan<- prometheus.Metric)
+
+	// ExportHistograms exports aggregated metrics for the measurement
+	ExportHistograms(res []*measurement.Result, ch chan<- prometheus.Metric)
 
 	// Describes metrics exported for this measurement type
 	Describe(ch chan<- *prometheus.Desc)

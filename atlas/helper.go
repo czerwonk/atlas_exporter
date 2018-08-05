@@ -6,6 +6,7 @@ import (
 
 	"github.com/DNS-OARC/ripeatlas/measurement"
 	"github.com/czerwonk/atlas_exporter/dns"
+	"github.com/czerwonk/atlas_exporter/exporter"
 	"github.com/czerwonk/atlas_exporter/http"
 	"github.com/czerwonk/atlas_exporter/ntp"
 	"github.com/czerwonk/atlas_exporter/ping"
@@ -20,7 +21,7 @@ func atlasMeasurementForResults(res []*measurement.Result, id string, workers ui
 		return nil, fmt.Errorf("could not retrieve probe information for measurement %s: %v", id, err)
 	}
 
-	exporter, err := exporterForType(res[0].Type())
+	exporter, err := exporterForType(res[0].Type(), id)
 	if err != nil {
 		return nil, fmt.Errorf("could determine exporter for measurement %s: %v", id, err)
 	}
@@ -62,9 +63,17 @@ func startProducer(res []*measurement.Result) chan int {
 	ch := make(chan int)
 
 	go func() {
+		added := make(map[int]bool)
+
 		for _, m := range res {
+			if _, found := added[m.PrbId()]; found {
+				continue
+			}
+
 			ch <- m.PrbId()
+			added[m.PrbId()] = true
 		}
+
 		close(ch)
 	}()
 
@@ -108,20 +117,20 @@ func probeForID(id int) (*probe.Probe, error) {
 	return p, nil
 }
 
-func exporterForType(t string) (MetricExporter, error) {
+func exporterForType(t string, id string) (exporter.MetricExporter, error) {
 	switch t {
 	case "ping":
-		return &ping.PingMetricExporter{}, nil
+		return ping.NewExporter(id), nil
 	case "traceroute":
-		return &traceroute.TracerouteMetricExporter{}, nil
+		return traceroute.NewExporter(id), nil
 	case "ntp":
-		return &ntp.NTPMetricExporter{}, nil
+		return ntp.NewExporter(id), nil
 	case "dns":
-		return &dns.DNSMetricExporter{}, nil
+		return dns.NewExporter(id), nil
 	case "http":
-		return &http.HTTPMetricExporter{}, nil
+		return http.NewExporter(id), nil
 	case "sslcert":
-		return &sslcert.SslCertMetricExporter{}, nil
+		return sslcert.NewExporter(id), nil
 	}
 
 	return nil, fmt.Errorf("type %s is not supported yet", t)
