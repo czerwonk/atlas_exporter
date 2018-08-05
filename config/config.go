@@ -11,7 +11,16 @@ import (
 // Config represents the configuration for the exporter
 type Config struct {
 	// Measurements is the ids of measurements used as source for metrics generation
-	Measurements []string `yaml:"measurements"`
+	Measurements      []string         `yaml:"measurements"`
+	HistogramBrackets HistogramBuckets `yaml:"histogram_buckets"`
+}
+
+// HistogramBrackets represents histogram brackets for different measurement types
+type HistogramBuckets struct {
+	DNS        []float64 `yaml:"dns,omitempty"`
+	HTTP       []float64 `yaml:"http,omitempty"`
+	Ping       []float64 `yaml:"ping,omitempty"`
+	Traceroute []float64 `yaml:"traceroute,omitempty"`
 }
 
 // Load loads a config from a reader

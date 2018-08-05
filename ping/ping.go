@@ -34,12 +34,16 @@ type pingMetricExporter struct {
 }
 
 // NewExporter creates a exporter for PING measurement results
-func NewExporter(id string) exporter.MetricExporter {
+func NewExporter(id string, buckets []float64) exporter.MetricExporter {
+	if buckets == nil {
+		buckets = prometheus.LinearBuckets(10, 10, 100)
+	}
+
 	hist := prometheus.NewHistogram(prometheus.HistogramOpts{
 		Namespace: ns,
 		Subsystem: sub,
 		Name:      "rtt_hist",
-		Buckets:   prometheus.LinearBuckets(10, 10, 100),
+		Buckets:   buckets,
 		Help:      "Histogram of round trip times over all ICMP requests",
 		ConstLabels: prometheus.Labels{
 			"measurement": id,

@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/DNS-OARC/ripeatlas/measurement"
+	"github.com/czerwonk/atlas_exporter/config"
 	"github.com/czerwonk/atlas_exporter/dns"
 	"github.com/czerwonk/atlas_exporter/exporter"
 	"github.com/czerwonk/atlas_exporter/http"
@@ -15,13 +16,13 @@ import (
 	"github.com/czerwonk/atlas_exporter/traceroute"
 )
 
-func atlasMeasurementForResults(res []*measurement.Result, id string, workers uint) (*AtlasMeasurement, error) {
+func atlasMeasurementForResults(res []*measurement.Result, id string, workers uint, cfg *config.Config) (*AtlasMeasurement, error) {
 	probes, err := probesForResults(res, workers)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve probe information for measurement %s: %v", id, err)
 	}
 
-	exporter, err := exporterForType(res[0].Type(), id)
+	exporter, err := exporterForType(res[0].Type(), id, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("could determine exporter for measurement %s: %v", id, err)
 	}
@@ -117,18 +118,18 @@ func probeForID(id int) (*probe.Probe, error) {
 	return p, nil
 }
 
-func exporterForType(t string, id string) (exporter.MetricExporter, error) {
+func exporterForType(t string, id string, cfg *config.Config) (exporter.MetricExporter, error) {
 	switch t {
 	case "ping":
-		return ping.NewExporter(id), nil
+		return ping.NewExporter(id, cfg.HistogramBrackets.Ping), nil
 	case "traceroute":
-		return traceroute.NewExporter(id), nil
+		return traceroute.NewExporter(id, cfg.HistogramBrackets.Traceroute), nil
 	case "ntp":
 		return ntp.NewExporter(id), nil
 	case "dns":
-		return dns.NewExporter(id), nil
+		return dns.NewExporter(id, cfg.HistogramBrackets.DNS), nil
 	case "http":
-		return http.NewExporter(id), nil
+		return http.NewExporter(id, cfg.HistogramBrackets.HTTP), nil
 	case "sslcert":
 		return sslcert.NewExporter(id), nil
 	}

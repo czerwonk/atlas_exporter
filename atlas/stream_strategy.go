@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/DNS-OARC/ripeatlas/measurement"
+	"github.com/czerwonk/atlas_exporter/config"
 	"github.com/prometheus/common/log"
 
 	"github.com/DNS-OARC/ripeatlas"
@@ -19,20 +20,22 @@ type streamingStrategy struct {
 	stream  *ripeatlas.Stream
 	results map[string][]*measurement.Result
 	workers uint
+	cfg     *config.Config
 	timeout time.Duration
 	mu      sync.RWMutex
 }
 
 // NewStreamingStrategy returns an strategy using the RIPE Atlas Streaming API
-func NewStreamingStrategy(ctx context.Context, ids []string, workers uint, timeout time.Duration) Strategy {
+func NewStreamingStrategy(ctx context.Context, cfg *config.Config, workers uint, timeout time.Duration) Strategy {
 	s := &streamingStrategy{
 		stream:  ripeatlas.NewStream(),
 		workers: workers,
 		timeout: timeout,
+		cfg:     cfg,
 		results: make(map[string][]*measurement.Result),
 	}
 
-	s.start(ctx, ids)
+	s.start(ctx, cfg.Measurements)
 	return s
 }
 
@@ -139,7 +142,7 @@ func (s *streamingStrategy) MeasurementResults(ctx context.Context, ids []string
 		}
 		delete(s.results, id)
 
-		r, err := atlasMeasurementForResults(res, id, s.workers)
+		r, err := atlasMeasurementForResults(res, id, s.workers, s.cfg)
 		if err != nil {
 			return nil, err
 		}

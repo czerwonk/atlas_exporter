@@ -38,6 +38,13 @@ for this example we want to retrieve results for measurement 8772164
 ```YAML
 measurements:
   - 8772164
+histogram_buckets:
+  ping:
+    - 5.0
+    - 10.0
+    - 25.0
+    - 50.0
+    - 100.0
  ```
 
 ### Call metrics URI

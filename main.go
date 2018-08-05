@@ -60,9 +60,9 @@ func main() {
 	if *streaming {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		strategy = atlas.NewStreamingStrategy(ctx, cfg.Measurements, *workerCount, *streamingTimeout)
+		strategy = atlas.NewStreamingStrategy(ctx, cfg, *workerCount, *streamingTimeout)
 	} else {
-		strategy = atlas.NewRequestStrategy(*workerCount)
+		strategy = atlas.NewRequestStrategy(cfg, *workerCount)
 	}
 
 	startServer()
@@ -142,7 +142,7 @@ func handleMetricsRequest(w http.ResponseWriter, r *http.Request) error {
 	ids := []string{}
 	if len(id) > 0 {
 		ids = append(ids, id)
-		s = atlas.NewRequestStrategy(*workerCount)
+		s = atlas.NewRequestStrategy(cfg, *workerCount)
 	} else {
 		ids = append(ids, cfg.Measurements...)
 	}

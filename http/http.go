@@ -44,12 +44,16 @@ type httpMetricExporter struct {
 }
 
 // NewExporter creates a exporter for HTTP measurement results
-func NewExporter(id string) exporter.MetricExporter {
+func NewExporter(id string, buckets []float64) exporter.MetricExporter {
+	if buckets == nil {
+		buckets = prometheus.LinearBuckets(100, 100, 100)
+	}
+
 	hist := prometheus.NewHistogram(prometheus.HistogramOpts{
 		Namespace: ns,
 		Subsystem: sub,
 		Name:      "rtt_hist",
-		Buckets:   prometheus.LinearBuckets(100, 100, 100),
+		Buckets:   buckets,
 		Help:      "Histogram of round trip times over all HTTP requests",
 		ConstLabels: prometheus.Labels{
 			"measurement": id,

@@ -29,6 +29,25 @@ func TestLoad(t *testing.T) {
 			},
 		},
 		{
+			name: "valid config with brackets",
+			value: `
+measurements: [ "123" ]
+histogram_buckets:
+  dns: [ 1.0, 2.0 ]
+  http: [ 3.0, 4.0 ]
+  ping: [ 5.0, 6.0 ]
+  traceroute: [ 7.0, 8.0 ]`,
+			expected: Config{
+				Measurements: []string{"123"},
+				HistogramBrackets: HistogramBuckets{
+					DNS:        []float64{1, 2},
+					HTTP:       []float64{3, 4},
+					Ping:       []float64{5, 6},
+					Traceroute: []float64{7, 8},
+				},
+			},
+		},
+		{
 			name:      "invalid config",
 			value:     `measurements: { 123, 456 }`,
 			wantsFail: true,

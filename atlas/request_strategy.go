@@ -6,18 +6,21 @@ import (
 
 	"github.com/DNS-OARC/ripeatlas"
 	"github.com/DNS-OARC/ripeatlas/measurement"
+	"github.com/czerwonk/atlas_exporter/config"
 	"github.com/prometheus/common/log"
 )
 
 type requestStrategy struct {
 	atlasser ripeatlas.Atlaser
 	workers  uint
+	cfg      *config.Config
 }
 
 // NewRequestStrategy returns an strategy to retrieve data from Atlas API using requests
-func NewRequestStrategy(workers uint) Strategy {
+func NewRequestStrategy(cfg *config.Config, workers uint) Strategy {
 	return requestStrategy{
 		atlasser: ripeatlas.Atlaser(ripeatlas.NewHttp()),
+		cfg:      cfg,
 		workers:  workers,
 	}
 }
@@ -75,7 +78,7 @@ func (s *requestStrategy) getMeasurementForID(ctx context.Context, id string, ch
 		return
 	}
 
-	r, err := atlasMeasurementForResults(res, id, s.workers)
+	r, err := atlasMeasurementForResults(res, id, s.workers, s.cfg)
 	if err != nil {
 		log.Errorf("failed getting measurement result for %s: %v", id, err)
 	}
