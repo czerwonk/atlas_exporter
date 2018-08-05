@@ -30,12 +30,27 @@ func init() {
 }
 
 type tracerouteMetricExporter struct {
-	id string
+	id      string
+	rttHist prometheus.Histogram
 }
 
 // NewExporter creates a exporter for traceroute measurement results
 func NewExporter(id string) exporter.MetricExporter {
-	return &tracerouteMetricExporter{id}
+	hist := prometheus.NewHistogram(prometheus.HistogramOpts{
+		Namespace: ns,
+		Subsystem: sub,
+		Name:      "rtt_hist",
+		Buckets:   prometheus.LinearBuckets(10, 10, 100),
+		Help:      "Histogram of round trip times over all traceroute requests",
+		ConstLabels: prometheus.Labels{
+			"measurement": id,
+		},
+	})
+
+	return &tracerouteMetricExporter{
+		id:      id,
+		rttHist: hist,
+	}
 }
 
 // Export exports a prometheus metric
@@ -65,7 +80,14 @@ func (m *tracerouteMetricExporter) Export(res *measurement.Result, probe *probe.
 
 // ExportHistograms exports aggregated metrics for the measurement
 func (m *tracerouteMetricExporter) ExportHistograms(res []*measurement.Result, ch chan<- prometheus.Metric) {
+	for _, r := range res {
+		success, rtt := processLastHop(r)
+		if success == 1 && rtt > 0 {
+			m.rttHist.Observe(rtt)
+		}
+	}
 
+	m.rttHist.Collect(ch)
 }
 
 func processLastHop(r *measurement.Result) (success float64, rtt float64) {
@@ -77,7 +99,11 @@ func processLastHop(r *measurement.Result) (success float64, rtt float64) {
 	for _, rep := range last.Replies() {
 		if rep.From() == r.DstAddr() {
 			success = 1
-			rtt = r.Rt()
+		}
+
+		repl := last.Replies()
+		if len(repl) > 0 {
+			rtt = repl[len(repl)-1].Rtt()
 		}
 	}
 
@@ -89,6 +115,7 @@ func (m *tracerouteMetricExporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- successDesc
 	ch <- hopDesc
 	ch <- rttDesc
+	ch <- m.rttHist.Desc()
 }
 
 // IsValid returns whether an result is valid or not (e.g. IPv6 measurement and Probe does not support IPv6)
