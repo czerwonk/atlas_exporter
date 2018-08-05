@@ -36,7 +36,7 @@ type dnsMetricExporter struct {
 // NewExporter creates a exporter for DNS measurement results
 func NewExporter(id string, buckets []float64) exporter.MetricExporter {
 	if buckets == nil {
-		buckets = prometheus.LinearBuckets(10, 10, 100)
+		buckets = []float64{10, 20, 50, 100, 250, 1000}
 	}
 
 	hist := prometheus.NewHistogram(prometheus.HistogramOpts{

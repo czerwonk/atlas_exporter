@@ -46,7 +46,7 @@ type httpMetricExporter struct {
 // NewExporter creates a exporter for HTTP measurement results
 func NewExporter(id string, buckets []float64) exporter.MetricExporter {
 	if buckets == nil {
-		buckets = prometheus.LinearBuckets(100, 100, 100)
+		buckets = []float64{100, 200, 500, 1000}
 	}
 
 	hist := prometheus.NewHistogram(prometheus.HistogramOpts{
