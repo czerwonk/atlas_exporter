@@ -11,9 +11,9 @@ const (
 )
 
 // NewMeasurement returns a new instance of `exorter.Measurement` for a DNS measurement
-func NewMeasurement(id string, cfg *config.Config) *exporter.Measurement {
+func NewMeasurement(id, ipVersion string, cfg *config.Config) *exporter.Measurement {
 	opts := []exporter.MeasurementOpt{
-		exporter.WithHistograms(newRttHistogram(id, cfg.HistogramBuckets.DNS.Rtt)),
+		exporter.WithHistograms(newRttHistogram(id, ipVersion, cfg.HistogramBuckets.DNS.Rtt)),
 	}
 
 	if cfg.FilterInvalidResults {

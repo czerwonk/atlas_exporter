@@ -12,9 +12,9 @@ const (
 )
 
 // NewMeasurement returns a new instance of `exorter.Measurement` for a traceroute measurement
-func NewMeasurement(id string, cfg *config.Config) *exporter.Measurement {
+func NewMeasurement(id, ipVersion string, cfg *config.Config) *exporter.Measurement {
 	opts := []exporter.MeasurementOpt{
-		exporter.WithHistograms(newRttHistogram(id, cfg.HistogramBuckets.Traceroute.Rtt)),
+		exporter.WithHistograms(newRttHistogram(id, ipVersion, cfg.HistogramBuckets.Traceroute.Rtt)),
 	}
 
 	if cfg.FilterInvalidResults {

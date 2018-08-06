@@ -11,9 +11,9 @@ const (
 )
 
 // NewMeasurement returns a new instance of `exorter.Measurement` for a HTTP measurement
-func NewMeasurement(id string, cfg *config.Config) *exporter.Measurement {
+func NewMeasurement(id, ipVersion string, cfg *config.Config) *exporter.Measurement {
 	opts := []exporter.MeasurementOpt{
-		exporter.WithHistograms(newRttHistogram(id, cfg.HistogramBuckets.HTTP.Rtt)),
+		exporter.WithHistograms(newRttHistogram(id, ipVersion, cfg.HistogramBuckets.HTTP.Rtt)),
 	}
 
 	if cfg.FilterInvalidResults {

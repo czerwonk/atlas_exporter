@@ -136,7 +136,7 @@ func (s *streamingStrategy) add(m *measurement.Result, probe *probe.Probe) {
 	h, found := s.measurements[msm]
 	if !found {
 		var err error
-		h, err = measurementForType(m.Type(), msm, s.cfg)
+		h, err = measurementForType(m.Type(), msm, strconv.Itoa(m.Af()), s.cfg)
 		if err != nil {
 			log.Error(err)
 			return

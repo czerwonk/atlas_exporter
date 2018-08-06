@@ -10,7 +10,7 @@ type rttHistogram struct {
 	rtt prometheus.Histogram
 }
 
-func newRttHistogram(id string, buckets []float64) exporter.Histogram {
+func newRttHistogram(id, ipVersion string, buckets []float64) exporter.Histogram {
 	if buckets == nil {
 		buckets = []float64{100, 200, 500, 1000}
 	}
@@ -24,6 +24,7 @@ func newRttHistogram(id string, buckets []float64) exporter.Histogram {
 			Help:      "Histogram of round trip times over all HTTP requests",
 			ConstLabels: prometheus.Labels{
 				"measurement": id,
+				"ip_version":  ipVersion,
 			},
 		}),
 	}

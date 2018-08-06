@@ -99,18 +99,18 @@ func probeForID(id int) (*probe.Probe, error) {
 	return p, nil
 }
 
-func measurementForType(t string, id string, cfg *config.Config) (*exporter.Measurement, error) {
+func measurementForType(t, id, ipVersion string, cfg *config.Config) (*exporter.Measurement, error) {
 	switch t {
 	case "ping":
-		return ping.NewMeasurement(id, cfg), nil
+		return ping.NewMeasurement(id, ipVersion, cfg), nil
 	case "traceroute":
-		return traceroute.NewMeasurement(id, cfg), nil
+		return traceroute.NewMeasurement(id, ipVersion, cfg), nil
 	case "ntp":
 		return ntp.NewMeasurement(id, cfg), nil
 	case "dns":
-		return dns.NewMeasurement(id, cfg), nil
+		return dns.NewMeasurement(id, ipVersion, cfg), nil
 	case "http":
-		return http.NewMeasurement(id, cfg), nil
+		return http.NewMeasurement(id, ipVersion, cfg), nil
 	case "sslcert":
 		return sslcert.NewMeasurement(id, cfg), nil
 	}
