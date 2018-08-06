@@ -16,8 +16,8 @@ type Probe struct {
 	} `json:"geometry"`
 }
 
-// FromJson parses json and returns a probe
-func FromJson(body []byte) (*Probe, error) {
+// FromJSON parses json and returns a probe
+func FromJSON(body []byte) (*Probe, error) {
 	var p Probe
 	err := json.Unmarshal(body, &p)
 

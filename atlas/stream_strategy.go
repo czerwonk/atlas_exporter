@@ -17,7 +17,7 @@ import (
 	"github.com/DNS-OARC/ripeatlas"
 )
 
-const ConnectionRetryInterval = 30 * time.Second
+const connectionRetryInterval = 30 * time.Second
 
 type streamingStrategy struct {
 	stream         *ripeatlas.Stream
@@ -61,7 +61,7 @@ func (s *streamingStrategy) startListening(ctx context.Context, m config.Measure
 		select {
 		case <-ctx.Done():
 			return
-		case <-time.After(ConnectionRetryInterval):
+		case <-time.After(connectionRetryInterval):
 			delete(s.measurements, m.ID)
 			continue
 		}

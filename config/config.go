@@ -17,6 +17,7 @@ type Config struct {
 	FilterInvalidResults bool             `yaml:"filter_invalid_results"`
 }
 
+// HistogramBuckets defines buckets for several histograms
 type HistogramBuckets struct {
 	DNS        RttHistogramBucket `yaml:"dns,omitempty"`
 	HTTP       RttHistogramBucket `yaml:"http,omitempty"`
@@ -24,6 +25,7 @@ type HistogramBuckets struct {
 	Traceroute RttHistogramBucket `yaml:"traceroute,omitempty"`
 }
 
+// RttHistogramBucket defines buckets for RTT histograms
 type RttHistogramBucket struct {
 	Rtt []float64 `yaml:"rtt"`
 }
