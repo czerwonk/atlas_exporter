@@ -37,7 +37,8 @@ or using config file mode:
 for this example we want to retrieve results for measurement 8772164
 ```YAML
 measurements:
-  - 8772164
+  - id: 8772164
+    timeout: 120s
 histogram_buckets:
   ping:
     - 5.0

@@ -17,7 +17,7 @@ import (
 	"github.com/prometheus/common/log"
 )
 
-const version string = "0.9.0"
+const version string = "0.9.1"
 
 var (
 	showVersion          = flag.Bool("version", false, "Print version information.")
@@ -115,11 +115,11 @@ func startServer() {
 	})
 	http.HandleFunc(*metricsPath, errorHandler(handleMetricsRequest))
 
-	log.Infof("Cache TTL: %v\n", time.Duration(*cacheTTL)*time.Second)
-	log.Infof("Cache cleanup interval (seconds): %v\n", time.Duration(*cacheCleanUp)*time.Second)
+	log.Infof("Cache TTL: %v", time.Duration(*cacheTTL)*time.Second)
+	log.Infof("Cache cleanup interval (seconds): %v", time.Duration(*cacheCleanUp)*time.Second)
 	atlas.InitCache(time.Duration(*cacheTTL)*time.Second, time.Duration(*cacheCleanUp)*time.Second)
 
-	log.Infof("Listening for %s on %s\n", *metricsPath, *listenAddress)
+	log.Infof("Listening for %s on %s", *metricsPath, *listenAddress)
 	log.Fatal(http.ListenAndServe(*listenAddress, nil))
 }
 
@@ -144,7 +144,7 @@ func handleMetricsRequest(w http.ResponseWriter, r *http.Request) error {
 		ids = append(ids, id)
 		s = atlas.NewRequestStrategy(cfg, *workerCount)
 	} else {
-		ids = append(ids, cfg.Measurements...)
+		ids = append(ids, cfg.MeasurementIDs()...)
 	}
 
 	if len(ids) == 0 {

@@ -3,6 +3,7 @@ package config
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -20,30 +21,54 @@ func TestLoad(t *testing.T) {
 			expected: Config{},
 		},
 		{
-			name:  "valid config",
-			value: `measurements: [ "123", "456" ]`,
+			name: "valid config",
+			value: `
+measurements:
+  - id: 123
+  - id: 456`,
 			expected: Config{
-				Measurements: []string{
-					"123", "456",
+				Measurements: []Measurement{
+					Measurement{ID: "123"},
+					Measurement{ID: "456"},
 				},
 			},
 		},
 		{
 			name: "valid config with brackets",
 			value: `
-measurements: [ "123" ]
+measurements:
+  - id: 123
 histogram_buckets:
   dns: [ 1.0, 2.0 ]
   http: [ 3.0, 4.0 ]
   ping: [ 5.0, 6.0 ]
   traceroute: [ 7.0, 8.0 ]`,
 			expected: Config{
-				Measurements: []string{"123"},
+				Measurements: []Measurement{
+					Measurement{ID: "123"},
+				},
 				HistogramBrackets: HistogramBuckets{
 					DNS:        []float64{1, 2},
 					HTTP:       []float64{3, 4},
 					Ping:       []float64{5, 6},
 					Traceroute: []float64{7, 8},
+				},
+			},
+		},
+		{
+			name:      "invalid config",
+			value:     `measurements: { 123, 456 }`,
+			wantsFail: true,
+		},
+		{
+			name: "valid config with timeout",
+			value: `
+measurements:
+  - id: 123
+    timeout: 30s`,
+			expected: Config{
+				Measurements: []Measurement{
+					Measurement{ID: "123", Timeout: 30 * time.Second},
 				},
 			},
 		},
