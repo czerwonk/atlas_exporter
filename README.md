@@ -23,7 +23,7 @@ Since version 1.0 atlas_exporter provides you with histograms of round trip time
 The buckets can be configured in the config file (see below).
 
 Since this feature relies strongly on getting each update for a measurement, the Stream API mode has to be used.
-Histogram metrics enables you to calculate percentiles for a specifiv indicator (in our case round trip time). This allows better monitoring of defined service level objectives (e.g. Ping RTT of a specific measurement should be under a specific threshold based of 90% of the requests disregarding the highest 10% -> p90).
+Histogram metrics enables you to calculate percentiles for a specifiv indicator (in our case round trip time). This allows better monitoring of defined service level objectives (e.g. Ping RTT of a specific measurement should be under a specific threshold based on 90% of the requests disregarding the highest 10% -> p90).
 
 For more information:
 https://prometheus.io/docs/practices/histograms/
