@@ -5,6 +5,7 @@ import (
 	"github.com/czerwonk/atlas_exporter/probe"
 )
 
+// DefaultResultValidator is the validator used by many measurement types
 type DefaultResultValidator struct {
 }
 

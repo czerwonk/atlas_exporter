@@ -99,20 +99,20 @@ func probeForID(id int) (*probe.Probe, error) {
 	return p, nil
 }
 
-func handlerForType(t string, id string, cfg *config.Config) (*exporter.ResultHandler, error) {
+func handlerForType(t string, id string, cfg *config.Config) (*exporter.Measurement, error) {
 	switch t {
 	case "ping":
-		return ping.NewResultHandler(id, cfg), nil
+		return ping.NewMeasurement(id, cfg), nil
 	case "traceroute":
-		return traceroute.NewResultHandler(id, cfg), nil
+		return traceroute.NewMeasurement(id, cfg), nil
 	case "ntp":
-		return ntp.NewResultHandler(id, cfg), nil
+		return ntp.NewMeasurement(id, cfg), nil
 	case "dns":
-		return dns.NewResultHandler(id, cfg), nil
+		return dns.NewMeasurement(id, cfg), nil
 	case "http":
-		return http.NewResultHandler(id, cfg), nil
+		return http.NewMeasurement(id, cfg), nil
 	case "sslcert":
-		return sslcert.NewResultHandler(id, cfg), nil
+		return sslcert.NewMeasurement(id, cfg), nil
 	}
 
 	return nil, fmt.Errorf("type %s is not supported yet", t)

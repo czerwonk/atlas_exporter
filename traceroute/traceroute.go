@@ -11,8 +11,9 @@ const (
 	sub = "traceroute"
 )
 
-func NewResultHandler(id string, cfg *config.Config) *exporter.ResultHandler {
-	opts := []exporter.ResultHandlerOpt{
+// NewMeasurement returns a new instance of `exorter.Measurement` for a traceroute measurement
+func NewMeasurement(id string, cfg *config.Config) *exporter.Measurement {
+	opts := []exporter.MeasurementOpt{
 		exporter.WithHistograms(newRttHistogram(id, cfg.HistogramBuckets.Traceroute.Rtt)),
 	}
 
@@ -20,7 +21,7 @@ func NewResultHandler(id string, cfg *config.Config) *exporter.ResultHandler {
 		opts = append(opts, exporter.WithValidator(&tracerouteResultValidator{}))
 	}
 
-	return exporter.NewResultHandler(&tracerouteExporter{id}, opts...)
+	return exporter.NewMeasurement(&tracerouteExporter{id}, opts...)
 }
 
 func processLastHop(r *measurement.Result) (success float64, rtt float64) {

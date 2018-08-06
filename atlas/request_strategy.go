@@ -27,8 +27,8 @@ func NewRequestStrategy(cfg *config.Config, workers uint) Strategy {
 	}
 }
 
-func (s requestStrategy) MeasurementResults(ctx context.Context, ids []string) ([]*exporter.ResultHandler, error) {
-	ch := make(chan *exporter.ResultHandler)
+func (s requestStrategy) MeasurementResults(ctx context.Context, ids []string) ([]*exporter.Measurement, error) {
+	ch := make(chan *exporter.Measurement)
 
 	wg := sync.WaitGroup{}
 	wg.Add(len(ids))
@@ -42,7 +42,7 @@ func (s requestStrategy) MeasurementResults(ctx context.Context, ids []string) (
 		go s.getMeasurementForID(ctx, id, ch, &wg)
 	}
 
-	res := make([]*exporter.ResultHandler, 0)
+	res := make([]*exporter.Measurement, 0)
 	for {
 		select {
 		case m, more := <-ch:
@@ -57,7 +57,7 @@ func (s requestStrategy) MeasurementResults(ctx context.Context, ids []string) (
 	}
 }
 
-func (s *requestStrategy) getMeasurementForID(ctx context.Context, id string, ch chan<- *exporter.ResultHandler, wg *sync.WaitGroup) {
+func (s *requestStrategy) getMeasurementForID(ctx context.Context, id string, ch chan<- *exporter.Measurement, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	resultCh, err := s.atlasser.MeasurementLatest(ripeatlas.Params{"pk": id})

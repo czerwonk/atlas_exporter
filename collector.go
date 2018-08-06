@@ -6,10 +6,10 @@ import (
 )
 
 type collector struct {
-	measurements []*exporter.ResultHandler
+	measurements []*exporter.Measurement
 }
 
-func newCollector(measurements []*exporter.ResultHandler) *collector {
+func newCollector(measurements []*exporter.Measurement) *collector {
 	return &collector{
 		measurements: measurements,
 	}

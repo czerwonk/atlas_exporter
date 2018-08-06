@@ -21,7 +21,7 @@ const ConnectionRetryInterval = 30 * time.Second
 
 type streamingStrategy struct {
 	stream         *ripeatlas.Stream
-	results        map[string]*exporter.ResultHandler
+	results        map[string]*exporter.Measurement
 	workers        uint
 	cfg            *config.Config
 	defaultTimeout time.Duration
@@ -35,7 +35,7 @@ func NewStreamingStrategy(ctx context.Context, cfg *config.Config, workers uint,
 		workers:        workers,
 		defaultTimeout: defaultTimeout,
 		cfg:            cfg,
-		results:        make(map[string]*exporter.ResultHandler),
+		results:        make(map[string]*exporter.Measurement),
 	}
 
 	s.start(ctx, cfg.Measurements)
@@ -148,11 +148,11 @@ func (s *streamingStrategy) add(m *measurement.Result, probe *probe.Probe) {
 	h.Add(m, probe)
 }
 
-func (s *streamingStrategy) MeasurementResults(ctx context.Context, ids []string) ([]*exporter.ResultHandler, error) {
+func (s *streamingStrategy) MeasurementResults(ctx context.Context, ids []string) ([]*exporter.Measurement, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	measurements := make([]*exporter.ResultHandler, 0)
+	measurements := make([]*exporter.Measurement, 0)
 	for _, id := range ids {
 		res, found := s.results[id]
 		if !found {

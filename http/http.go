@@ -10,8 +10,9 @@ const (
 	sub = "http"
 )
 
-func NewResultHandler(id string, cfg *config.Config) *exporter.ResultHandler {
-	opts := []exporter.ResultHandlerOpt{
+// NewMeasurement returns a new instance of `exorter.Measurement` for a HTTP measurement
+func NewMeasurement(id string, cfg *config.Config) *exporter.Measurement {
+	opts := []exporter.MeasurementOpt{
 		exporter.WithHistograms(newRttHistogram(id, cfg.HistogramBuckets.HTTP.Rtt)),
 	}
 
@@ -19,5 +20,5 @@ func NewResultHandler(id string, cfg *config.Config) *exporter.ResultHandler {
 		opts = append(opts, exporter.WithValidator(&exporter.DefaultResultValidator{}))
 	}
 
-	return exporter.NewResultHandler(&httpExporter{id}, opts...)
+	return exporter.NewMeasurement(&httpExporter{id}, opts...)
 }

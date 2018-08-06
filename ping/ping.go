@@ -10,8 +10,9 @@ const (
 	sub = "ping"
 )
 
-func NewResultHandler(id string, cfg *config.Config) *exporter.ResultHandler {
-	opts := []exporter.ResultHandlerOpt{
+// NewMeasurement returns a new instance of `exorter.Measurement` for a ping measurement
+func NewMeasurement(id string, cfg *config.Config) *exporter.Measurement {
+	opts := []exporter.MeasurementOpt{
 		exporter.WithHistograms(newRttHistogram(id, cfg.HistogramBuckets.Ping.Rtt)),
 	}
 
@@ -19,5 +20,5 @@ func NewResultHandler(id string, cfg *config.Config) *exporter.ResultHandler {
 		opts = append(opts, exporter.WithValidator(&exporter.DefaultResultValidator{}))
 	}
 
-	return exporter.NewResultHandler(&pingExporter{id}, opts...)
+	return exporter.NewMeasurement(&pingExporter{id}, opts...)
 }

@@ -10,12 +10,13 @@ const (
 	sub = "sslcert"
 )
 
-func NewResultHandler(id string, cfg *config.Config) *exporter.ResultHandler {
-	opts := []exporter.ResultHandlerOpt{}
+// NewMeasurement returns a new instance of `exorter.Measurement` for a SSL measurement
+func NewMeasurement(id string, cfg *config.Config) *exporter.Measurement {
+	opts := []exporter.MeasurementOpt{}
 
 	if cfg.FilterInvalidResults {
 		opts = append(opts, exporter.WithValidator(&exporter.DefaultResultValidator{}))
 	}
 
-	return exporter.NewResultHandler(&sslCertExporter{id}, opts...)
+	return exporter.NewMeasurement(&sslCertExporter{id}, opts...)
 }
