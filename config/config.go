@@ -32,8 +32,8 @@ type RttHistogramBucket struct {
 
 // Measurement represents config options for one measurement
 type Measurement struct {
-	ID      string        `id`
-	Timeout time.Duration `timeout`
+	ID      string        `yaml:"id"`
+	Timeout time.Duration `yaml:"timeout,omitempty"`
 }
 
 // MeasurementIDs represents all IDs of configured measurements
