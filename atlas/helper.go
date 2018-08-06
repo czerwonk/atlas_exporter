@@ -99,7 +99,7 @@ func probeForID(id int) (*probe.Probe, error) {
 	return p, nil
 }
 
-func handlerForType(t string, id string, cfg *config.Config) (*exporter.Measurement, error) {
+func measurementForType(t string, id string, cfg *config.Config) (*exporter.Measurement, error) {
 	switch t {
 	case "ping":
 		return ping.NewMeasurement(id, cfg), nil

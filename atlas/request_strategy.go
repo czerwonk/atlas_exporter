@@ -81,7 +81,7 @@ func (s *requestStrategy) getMeasurementForID(ctx context.Context, id string, ch
 	}
 
 	first := res[0]
-	h, err := handlerForType(first.Type(), id, s.cfg)
+	h, err := measurementForType(first.Type(), id, s.cfg)
 	if err != nil {
 		log.Errorln(err)
 		return

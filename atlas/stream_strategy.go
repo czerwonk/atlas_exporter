@@ -21,7 +21,7 @@ const ConnectionRetryInterval = 30 * time.Second
 
 type streamingStrategy struct {
 	stream         *ripeatlas.Stream
-	results        map[string]*exporter.Measurement
+	measurements   map[string]*exporter.Measurement
 	workers        uint
 	cfg            *config.Config
 	defaultTimeout time.Duration
@@ -35,7 +35,7 @@ func NewStreamingStrategy(ctx context.Context, cfg *config.Config, workers uint,
 		workers:        workers,
 		defaultTimeout: defaultTimeout,
 		cfg:            cfg,
-		results:        make(map[string]*exporter.Measurement),
+		measurements:   make(map[string]*exporter.Measurement),
 	}
 
 	s.start(ctx, cfg.Measurements)
@@ -62,7 +62,7 @@ func (s *streamingStrategy) startListening(ctx context.Context, m config.Measure
 		case <-ctx.Done():
 			return
 		case <-time.After(ConnectionRetryInterval):
-			delete(s.results, m.ID)
+			delete(s.measurements, m.ID)
 			continue
 		}
 	}
@@ -133,16 +133,16 @@ func (s *streamingStrategy) add(m *measurement.Result, probe *probe.Probe) {
 
 	msm := strconv.Itoa(m.MsmId())
 
-	h, found := s.results[msm]
+	h, found := s.measurements[msm]
 	if !found {
 		var err error
-		h, err = handlerForType(m.Type(), msm, s.cfg)
+		h, err = measurementForType(m.Type(), msm, s.cfg)
 		if err != nil {
 			log.Error(err)
 			return
 		}
 
-		s.results[msm] = h
+		s.measurements[msm] = h
 	}
 
 	h.Add(m, probe)
@@ -152,16 +152,16 @@ func (s *streamingStrategy) MeasurementResults(ctx context.Context, ids []string
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	measurements := make([]*exporter.Measurement, 0)
+	result := make([]*exporter.Measurement, 0)
 	for _, id := range ids {
-		res, found := s.results[id]
+		m, found := s.measurements[id]
 		if !found {
 			continue
 		}
 
-		measurements = append(measurements, res)
-		res.Scraped()
+		result = append(result, m)
+		m.Scraped()
 	}
 
-	return measurements, nil
+	return result, nil
 }
