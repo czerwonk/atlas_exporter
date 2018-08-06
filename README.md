@@ -13,6 +13,21 @@ Metric exporter for RIPE Atlas measurement results
 ## Streaming API
 Since version 0.8 atlas_exporter also supports retrieving measurement results by RIPE Atlas Streaming API (https://atlas.ripe.net/docs/result-streaming/). Using this feature requires config file mode. All configured measurements are subscribed on start so the latest result for each probe is updated continously and scrape time is reduced significantly. When a socket.io connection fails or times out a reconnect is initiated. The timeout can be configured using the `-streaming.timeout` parameter. Streaming API is the default for config file mode, it can be disabled by setting `-streaming` to false.
 
+## Histograms
+Since version 1.0 atlas_exporter provides you with histograms of round trip times of the following measurement types:
+* DNS
+* Ping
+* Traceroute
+* HTTP
+
+The buckets can be configured in the config file (see below).
+
+Since this feature relies strongly on getting each update for a measurement, the Stream API mode has to be used.
+Histogram metrics enables you to calculate percentiles for a specifiv indicator (in our case round trip time). This allows better monitoring of defined service level objectives (e.g. Ping RTT of a specific measurement should be under a specific threshold based of 90% of the requests disregarding the highest 10% -> p90).
+
+For more information:
+https://prometheus.io/docs/practices/histograms/
+
 ## Install
 ```
 go get -u github.com/czerwonk/atlas_exporter
