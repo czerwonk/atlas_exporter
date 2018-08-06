@@ -7,6 +7,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/czerwonk/atlas_exporter/exporter"
+	"github.com/czerwonk/atlas_exporter/probe"
+
 	"github.com/DNS-OARC/ripeatlas/measurement"
 	"github.com/czerwonk/atlas_exporter/config"
 	"github.com/prometheus/common/log"
@@ -14,11 +17,11 @@ import (
 	"github.com/DNS-OARC/ripeatlas"
 )
 
-const ConnectionRetryInterval = 30 * time.Second
+const connectionRetryInterval = 30 * time.Second
 
 type streamingStrategy struct {
 	stream         *ripeatlas.Stream
-	results        map[string][]*measurement.Result
+	measurements   map[string]*exporter.Measurement
 	workers        uint
 	cfg            *config.Config
 	defaultTimeout time.Duration
@@ -32,7 +35,7 @@ func NewStreamingStrategy(ctx context.Context, cfg *config.Config, workers uint,
 		workers:        workers,
 		defaultTimeout: defaultTimeout,
 		cfg:            cfg,
-		results:        make(map[string][]*measurement.Result),
+		measurements:   make(map[string]*exporter.Measurement),
 	}
 
 	s.start(ctx, cfg.Measurements)
@@ -58,8 +61,8 @@ func (s *streamingStrategy) startListening(ctx context.Context, m config.Measure
 		select {
 		case <-ctx.Done():
 			return
-		case <-time.After(ConnectionRetryInterval):
-			delete(s.results, m.ID)
+		case <-time.After(connectionRetryInterval):
+			delete(s.measurements, m.ID)
 			continue
 		}
 	}
@@ -115,50 +118,49 @@ func (s *streamingStrategy) listenForResults(ctx context.Context, timeout time.D
 func (s *streamingStrategy) processMeasurement(m *measurement.Result) {
 	log.Infof("Got result for %d from probe %d", m.MsmId(), m.PrbId())
 
-	go s.warmProbeCache(m)
-	s.add(m)
-}
-
-func (s *streamingStrategy) warmProbeCache(m *measurement.Result) {
-	_, err := probeForID(m.PrbId())
+	probe, err := probeForID(m.PrbId())
 	if err != nil {
 		log.Error(err)
+		return
 	}
+
+	s.add(m, probe)
 }
 
-func (s *streamingStrategy) add(m *measurement.Result) {
+func (s *streamingStrategy) add(m *measurement.Result, probe *probe.Probe) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	msm := strconv.Itoa(m.MsmId())
 
-	_, found := s.results[msm]
+	mes, found := s.measurements[msm]
 	if !found {
-		s.results[msm] = make([]*measurement.Result, 0)
+		var err error
+		mes, err = measurementForType(m.Type(), msm, strconv.Itoa(m.Af()), s.cfg)
+		if err != nil {
+			log.Error(err)
+			return
+		}
+
+		s.measurements[msm] = mes
 	}
 
-	s.results[msm] = append(s.results[msm], m)
+	mes.Add(m, probe)
 }
 
-func (s *streamingStrategy) MeasurementResults(ctx context.Context, ids []string) ([]*AtlasMeasurement, error) {
+func (s *streamingStrategy) MeasurementResults(ctx context.Context, ids []string) ([]*exporter.Measurement, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	measurements := make([]*AtlasMeasurement, 0)
+	result := make([]*exporter.Measurement, 0)
 	for _, id := range ids {
-		res, found := s.results[id]
+		m, found := s.measurements[id]
 		if !found {
 			continue
 		}
-		delete(s.results, id)
 
-		r, err := atlasMeasurementForResults(res, id, s.workers, s.cfg)
-		if err != nil {
-			return nil, err
-		}
-
-		measurements = append(measurements, r)
+		result = append(result, m)
 	}
 
-	return measurements, nil
+	return result, nil
 }

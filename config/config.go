@@ -12,24 +12,31 @@ import (
 // Config represents the configuration for the exporter
 type Config struct {
 	// Measurements is the ids of measurements used as source for metrics generation
-	Measurements      []Measurement    `yaml:"measurements"`
-	HistogramBrackets HistogramBuckets `yaml:"histogram_buckets"`
+	Measurements         []Measurement    `yaml:"measurements"`
+	HistogramBuckets     HistogramBuckets `yaml:"histogram_buckets"`
+	FilterInvalidResults bool             `yaml:"filter_invalid_results"`
+}
+
+// HistogramBuckets defines buckets for several histograms
+type HistogramBuckets struct {
+	DNS        RttHistogramBucket `yaml:"dns,omitempty"`
+	HTTP       RttHistogramBucket `yaml:"http,omitempty"`
+	Ping       RttHistogramBucket `yaml:"ping,omitempty"`
+	Traceroute RttHistogramBucket `yaml:"traceroute,omitempty"`
+}
+
+// RttHistogramBucket defines buckets for RTT histograms
+type RttHistogramBucket struct {
+	Rtt []float64 `yaml:"rtt"`
 }
 
 // Measurement represents config options for one measurement
 type Measurement struct {
-	ID      string        `id`
-	Timeout time.Duration `timeout`
+	ID      string        `yaml:"id"`
+	Timeout time.Duration `yaml:"timeout,omitempty"`
 }
 
-// HistogramBrackets represents histogram brackets for different measurement types
-type HistogramBuckets struct {
-	DNS        []float64 `yaml:"dns,omitempty"`
-	HTTP       []float64 `yaml:"http,omitempty"`
-	Ping       []float64 `yaml:"ping,omitempty"`
-	Traceroute []float64 `yaml:"traceroute,omitempty"`
-}
-
+// MeasurementIDs represents all IDs of configured measurements
 func (c *Config) MeasurementIDs() []string {
 	ids := make([]string, len(c.Measurements))
 	for i, m := range c.Measurements {
@@ -46,7 +53,9 @@ func Load(r io.Reader) (*Config, error) {
 		return nil, fmt.Errorf("could not load config: %v", err)
 	}
 
-	c := &Config{}
+	c := &Config{
+		FilterInvalidResults: true,
+	}
 	if len(b) == 0 {
 		return c, nil
 	}

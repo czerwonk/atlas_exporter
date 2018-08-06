@@ -5,8 +5,8 @@ import (
 	"time"
 )
 
-// ProbeCache caches probe lookup results
-type ProbeCache struct {
+// Cache caches probe lookup results
+type Cache struct {
 	cache map[int]*cacheItem
 	mutex sync.RWMutex
 	ttl   time.Duration
@@ -18,12 +18,12 @@ type cacheItem struct {
 }
 
 // NewCache creates a probe cache
-func NewCache(ttl time.Duration) *ProbeCache {
-	return &ProbeCache{ttl: ttl, cache: make(map[int]*cacheItem)}
+func NewCache(ttl time.Duration) *Cache {
+	return &Cache{ttl: ttl, cache: make(map[int]*cacheItem)}
 }
 
 // Get retrieves a probe from the cache (if exists, else returns false)
-func (c *ProbeCache) Get(id int) (*Probe, bool) {
+func (c *Cache) Get(id int) (*Probe, bool) {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
 
@@ -35,7 +35,7 @@ func (c *ProbeCache) Get(id int) (*Probe, bool) {
 }
 
 // Add adds a probe to the cache
-func (c *ProbeCache) Add(id int, p *Probe) {
+func (c *Cache) Add(id int, p *Probe) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -43,7 +43,7 @@ func (c *ProbeCache) Add(id int, p *Probe) {
 }
 
 // CleanUp removes expired cache items
-func (c *ProbeCache) CleanUp() int {
+func (c *Cache) CleanUp() int {
 	expired := make([]int, 0)
 
 	for k, v := range c.cache {

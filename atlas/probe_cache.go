@@ -7,7 +7,7 @@ import (
 	"github.com/prometheus/common/log"
 )
 
-var cache *probe.ProbeCache
+var cache *probe.Cache
 
 // InitCache initializes the cache
 func InitCache(ttl, cleanup time.Duration) {

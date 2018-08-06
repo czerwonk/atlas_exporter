@@ -16,9 +16,11 @@ func TestLoad(t *testing.T) {
 		wantsFail bool
 	}{
 		{
-			name:     "empty config",
-			value:    ``,
-			expected: Config{},
+			name:  "empty config",
+			value: ``,
+			expected: Config{
+				FilterInvalidResults: true,
+			},
 		},
 		{
 			name: "valid config",
@@ -31,6 +33,7 @@ measurements:
 					Measurement{ID: "123"},
 					Measurement{ID: "456"},
 				},
+				FilterInvalidResults: true,
 			},
 		},
 		{
@@ -39,20 +42,33 @@ measurements:
 measurements:
   - id: 123
 histogram_buckets:
-  dns: [ 1.0, 2.0 ]
-  http: [ 3.0, 4.0 ]
-  ping: [ 5.0, 6.0 ]
-  traceroute: [ 7.0, 8.0 ]`,
+  dns:
+    rtt: [ 1.0, 2.0 ]
+  http: 
+    rtt: [ 3.0, 4.0 ]
+  ping: 
+    rtt: [ 5.0, 6.0 ]
+  traceroute: 
+    rtt: [ 7.0, 8.0 ]`,
 			expected: Config{
 				Measurements: []Measurement{
 					Measurement{ID: "123"},
 				},
-				HistogramBrackets: HistogramBuckets{
-					DNS:        []float64{1, 2},
-					HTTP:       []float64{3, 4},
-					Ping:       []float64{5, 6},
-					Traceroute: []float64{7, 8},
+				HistogramBuckets: HistogramBuckets{
+					DNS: RttHistogramBucket{
+						Rtt: []float64{1, 2},
+					},
+					HTTP: RttHistogramBucket{
+						Rtt: []float64{3, 4},
+					},
+					Ping: RttHistogramBucket{
+						Rtt: []float64{5, 6},
+					},
+					Traceroute: RttHistogramBucket{
+						Rtt: []float64{7, 8},
+					},
 				},
+				FilterInvalidResults: true,
 			},
 		},
 		{
@@ -70,6 +86,15 @@ measurements:
 				Measurements: []Measurement{
 					Measurement{ID: "123", Timeout: 30 * time.Second},
 				},
+				FilterInvalidResults: true,
+			},
+		},
+		{
+			name: "valid config with filter override",
+			value: `
+filter_invalid_results: false`,
+			expected: Config{
+				FilterInvalidResults: false,
 			},
 		},
 		{

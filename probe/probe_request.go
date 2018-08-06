@@ -26,5 +26,5 @@ func Get(id int) (*Probe, error) {
 		return nil, err
 	}
 
-	return FromJson(body)
+	return FromJSON(body)
 }

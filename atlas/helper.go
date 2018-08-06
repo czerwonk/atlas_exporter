@@ -16,25 +16,6 @@ import (
 	"github.com/czerwonk/atlas_exporter/traceroute"
 )
 
-func atlasMeasurementForResults(res []*measurement.Result, id string, workers uint, cfg *config.Config) (*AtlasMeasurement, error) {
-	probes, err := probesForResults(res, workers)
-	if err != nil {
-		return nil, fmt.Errorf("could not retrieve probe information for measurement %s: %v", id, err)
-	}
-
-	exporter, err := exporterForType(res[0].Type(), id, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("could determine exporter for measurement %s: %v", id, err)
-	}
-
-	return &AtlasMeasurement{
-		ID:       id,
-		Results:  res,
-		Probes:   probes,
-		Exporter: exporter,
-	}, nil
-}
-
 func probesForResults(res []*measurement.Result, workers uint) (map[int]*probe.Probe, error) {
 	probes := make(map[int]*probe.Probe)
 
@@ -118,20 +99,20 @@ func probeForID(id int) (*probe.Probe, error) {
 	return p, nil
 }
 
-func exporterForType(t string, id string, cfg *config.Config) (exporter.MetricExporter, error) {
+func measurementForType(t, id, ipVersion string, cfg *config.Config) (*exporter.Measurement, error) {
 	switch t {
 	case "ping":
-		return ping.NewExporter(id, cfg.HistogramBrackets.Ping), nil
+		return ping.NewMeasurement(id, ipVersion, cfg), nil
 	case "traceroute":
-		return traceroute.NewExporter(id, cfg.HistogramBrackets.Traceroute), nil
+		return traceroute.NewMeasurement(id, ipVersion, cfg), nil
 	case "ntp":
-		return ntp.NewExporter(id), nil
+		return ntp.NewMeasurement(id, cfg), nil
 	case "dns":
-		return dns.NewExporter(id, cfg.HistogramBrackets.DNS), nil
+		return dns.NewMeasurement(id, ipVersion, cfg), nil
 	case "http":
-		return http.NewExporter(id, cfg.HistogramBrackets.HTTP), nil
+		return http.NewMeasurement(id, ipVersion, cfg), nil
 	case "sslcert":
-		return sslcert.NewExporter(id), nil
+		return sslcert.NewMeasurement(id, cfg), nil
 	}
 
 	return nil, fmt.Errorf("type %s is not supported yet", t)

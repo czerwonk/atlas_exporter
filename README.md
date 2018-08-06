@@ -41,11 +41,13 @@ measurements:
     timeout: 120s
 histogram_buckets:
   ping:
-    - 5.0
-    - 10.0
-    - 25.0
-    - 50.0
-    - 100.0
+    rtt:
+      - 5.0
+      - 10.0
+      - 25.0
+      - 50.0
+      - 100.0
+filter_invalid_results: true
  ```
 
 ### Call metrics URI
@@ -83,8 +85,10 @@ atlas_traceroute_hops{asn="133752",dst_addr="8.8.8.8",dst_name="8.8.8.8",ip_vers
 * http (return code, rtt, http version, header size, body size)  
 * sslcert (alert, rtt)
 
-## Configuration (Prometheus)
-```
+## Prometheus configuration
+
+### Ad-Hoc Mode
+```yaml
   - job_name: 'atlas_exporter'
     scrape_interval: 5m
     static_configs:
@@ -105,6 +109,15 @@ atlas_traceroute_hops{asn="133752",dst_addr="8.8.8.8",dst_name="8.8.8.8",ip_vers
         target_label: __address__
         replacement: atlas-exporter.mytld:9400
 
+```
+
+### Config Mode
+```yaml
+  - job_name: 'atlas_exporter'
+    scrape_interval: 5m
+    static_configs:
+      - targets:
+          - atlas-exporter.mytld:9400
 ```
 
 ## Third Party Components

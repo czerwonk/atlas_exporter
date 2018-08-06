@@ -17,22 +17,21 @@ import (
 	"github.com/prometheus/common/log"
 )
 
-const version string = "0.9.1"
+const version string = "1.0 beta"
 
 var (
-	showVersion          = flag.Bool("version", false, "Print version information.")
-	listenAddress        = flag.String("web.listen-address", ":9400", "Address on which to expose metrics and web interface.")
-	metricsPath          = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
-	filterInvalidResults = flag.Bool("filter.invalid-results", true, "Exclude offline/incompatible probes")
-	cacheTTL             = flag.Int("cache.ttl", 3600, "Cache time to live in seconds")
-	cacheCleanUp         = flag.Int("cache.cleanup", 300, "Interval for cache clean up in seconds")
-	configFile           = flag.String("config.file", "", "Path to congig file to use")
-	timeout              = flag.Duration("timeout", 60*time.Second, "Timeout")
-	workerCount          = flag.Uint("worker.count", 8, "Number of go routines retrieving probe information")
-	streaming            = flag.Bool("streaming", true, "Retrieve data by subscribing to Atlas Streaming API")
-	streamingTimeout     = flag.Duration("streaming.timeout", 5*time.Minute, "When no update is received in this timespan a reconnect is initiated.")
-	cfg                  *config.Config
-	strategy             atlas.Strategy
+	showVersion      = flag.Bool("version", false, "Print version information.")
+	listenAddress    = flag.String("web.listen-address", ":9400", "Address on which to expose metrics and web interface.")
+	metricsPath      = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
+	cacheTTL         = flag.Int("cache.ttl", 3600, "Cache time to live in seconds")
+	cacheCleanUp     = flag.Int("cache.cleanup", 300, "Interval for cache clean up in seconds")
+	configFile       = flag.String("config.file", "", "Path to congig file to use")
+	timeout          = flag.Duration("timeout", 60*time.Second, "Timeout")
+	workerCount      = flag.Uint("worker.count", 8, "Number of go routines retrieving probe information")
+	streaming        = flag.Bool("streaming", true, "Retrieve data by subscribing to Atlas Streaming API")
+	streamingTimeout = flag.Duration("streaming.timeout", 5*time.Minute, "When no update is received in this timespan a reconnect is initiated.")
+	cfg              *config.Config
+	strategy         atlas.Strategy
 )
 
 func init() {
@@ -162,7 +161,7 @@ func handleMetricsRequest(w http.ResponseWriter, r *http.Request) error {
 	if len(measurements) > 0 {
 		reg := prometheus.NewRegistry()
 
-		c := newCollector(measurements, *filterInvalidResults)
+		c := newCollector(measurements)
 		reg.MustRegister(c)
 
 		promhttp.HandlerFor(reg, promhttp.HandlerOpts{
