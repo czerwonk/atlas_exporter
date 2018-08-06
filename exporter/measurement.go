@@ -25,22 +25,20 @@ func WithValidator(v ResultValidator) MeasurementOpt {
 
 // Measurement handles measurement results and converts to metrics
 type Measurement struct {
-	latest          map[int]*measurement.Result
-	sinceLastscrape []*measurement.Result
-	probes          map[int]*probe.Probe
-	histograms      []Histogram
-	exporter        Exporter
-	validator       ResultValidator
+	latest     map[int]*measurement.Result
+	probes     map[int]*probe.Probe
+	histograms []Histogram
+	exporter   Exporter
+	validator  ResultValidator
 }
 
 // NewMeasurement returns a new instance of `Measurement`
 func NewMeasurement(exporter Exporter, opts ...MeasurementOpt) *Measurement {
 	r := &Measurement{
-		latest:          make(map[int]*measurement.Result),
-		sinceLastscrape: make([]*measurement.Result, 0),
-		probes:          make(map[int]*probe.Probe),
-		histograms:      make([]Histogram, 0),
-		exporter:        exporter,
+		latest:     make(map[int]*measurement.Result),
+		probes:     make(map[int]*probe.Probe),
+		histograms: make([]Histogram, 0),
+		exporter:   exporter,
 	}
 
 	for _, opt := range opts {
@@ -56,18 +54,12 @@ func (r *Measurement) Add(m *measurement.Result, probe *probe.Probe) {
 		return
 	}
 
-	r.sinceLastscrape = append(r.sinceLastscrape, m)
 	r.latest[m.PrbId()] = m
 	r.probes[m.PrbId()] = probe
 
 	for _, h := range r.histograms {
 		h.ProcessResult(m)
 	}
-}
-
-// Scraped is called when the scrape happened to clear some internal states
-func (r *Measurement) Scraped() {
-	r.sinceLastscrape = make([]*measurement.Result, 0)
 }
 
 // Describe describes all metrics for the `Measurement`

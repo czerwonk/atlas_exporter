@@ -82,7 +82,7 @@ func (s *requestStrategy) getMeasurementForID(ctx context.Context, id string, ch
 	}
 
 	first := res[0]
-	h, err := measurementForType(first.Type(), id, strconv.Itoa(first.Af()), s.cfg)
+	mes, err := measurementForType(first.Type(), id, strconv.Itoa(first.Af()), s.cfg)
 	if err != nil {
 		log.Errorln(err)
 		return
@@ -95,8 +95,8 @@ func (s *requestStrategy) getMeasurementForID(ctx context.Context, id string, ch
 	}
 
 	for _, r := range res {
-		h.Add(r, probes[r.PrbId()])
+		mes.Add(r, probes[r.PrbId()])
 	}
 
-	ch <- h
+	ch <- mes
 }

@@ -133,19 +133,19 @@ func (s *streamingStrategy) add(m *measurement.Result, probe *probe.Probe) {
 
 	msm := strconv.Itoa(m.MsmId())
 
-	h, found := s.measurements[msm]
+	mes, found := s.measurements[msm]
 	if !found {
 		var err error
-		h, err = measurementForType(m.Type(), msm, strconv.Itoa(m.Af()), s.cfg)
+		mes, err = measurementForType(m.Type(), msm, strconv.Itoa(m.Af()), s.cfg)
 		if err != nil {
 			log.Error(err)
 			return
 		}
 
-		s.measurements[msm] = h
+		s.measurements[msm] = mes
 	}
 
-	h.Add(m, probe)
+	mes.Add(m, probe)
 }
 
 func (s *streamingStrategy) MeasurementResults(ctx context.Context, ids []string) ([]*exporter.Measurement, error) {
@@ -160,7 +160,6 @@ func (s *streamingStrategy) MeasurementResults(ctx context.Context, ids []string
 		}
 
 		result = append(result, m)
-		m.Scraped()
 	}
 
 	return result, nil
