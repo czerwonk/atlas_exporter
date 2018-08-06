@@ -41,11 +41,13 @@ measurements:
     timeout: 120s
 histogram_buckets:
   ping:
-    - 5.0
-    - 10.0
-    - 25.0
-    - 50.0
-    - 100.0
+    rtt:
+      - 5.0
+      - 10.0
+      - 25.0
+      - 50.0
+      - 100.0
+config_invalid_results: true
  ```
 
 ### Call metrics URI

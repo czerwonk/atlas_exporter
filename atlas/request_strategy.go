@@ -4,6 +4,8 @@ import (
 	"context"
 	"sync"
 
+	"github.com/czerwonk/atlas_exporter/exporter"
+
 	"github.com/DNS-OARC/ripeatlas"
 	"github.com/DNS-OARC/ripeatlas/measurement"
 	"github.com/czerwonk/atlas_exporter/config"
@@ -25,8 +27,8 @@ func NewRequestStrategy(cfg *config.Config, workers uint) Strategy {
 	}
 }
 
-func (s requestStrategy) MeasurementResults(ctx context.Context, ids []string) ([]*AtlasMeasurement, error) {
-	ch := make(chan *AtlasMeasurement)
+func (s requestStrategy) MeasurementResults(ctx context.Context, ids []string) ([]*exporter.ResultHandler, error) {
+	ch := make(chan *exporter.ResultHandler)
 
 	wg := sync.WaitGroup{}
 	wg.Add(len(ids))
@@ -40,7 +42,7 @@ func (s requestStrategy) MeasurementResults(ctx context.Context, ids []string) (
 		go s.getMeasurementForID(ctx, id, ch, &wg)
 	}
 
-	res := []*AtlasMeasurement{}
+	res := make([]*exporter.ResultHandler, 0)
 	for {
 		select {
 		case m, more := <-ch:
@@ -55,7 +57,7 @@ func (s requestStrategy) MeasurementResults(ctx context.Context, ids []string) (
 	}
 }
 
-func (s *requestStrategy) getMeasurementForID(ctx context.Context, id string, ch chan<- *AtlasMeasurement, wg *sync.WaitGroup) {
+func (s *requestStrategy) getMeasurementForID(ctx context.Context, id string, ch chan<- *exporter.ResultHandler, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	resultCh, err := s.atlasser.MeasurementLatest(ripeatlas.Params{"pk": id})
@@ -78,10 +80,22 @@ func (s *requestStrategy) getMeasurementForID(ctx context.Context, id string, ch
 		return
 	}
 
-	r, err := atlasMeasurementForResults(res, id, s.workers, s.cfg)
+	first := res[0]
+	h, err := handlerForType(first.Type(), id, s.cfg)
 	if err != nil {
-		log.Errorf("failed getting measurement result for %s: %v", id, err)
+		log.Errorln(err)
+		return
 	}
 
-	ch <- r
+	probes, err := probesForResults(res, s.workers)
+	if err != nil {
+		log.Errorln(err)
+		return
+	}
+
+	for _, r := range res {
+		h.Add(r, probes[r.PrbId()])
+	}
+
+	ch <- h
 }
