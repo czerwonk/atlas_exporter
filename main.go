@@ -17,7 +17,7 @@ import (
 	"github.com/prometheus/common/log"
 )
 
-const version string = "1.0 beta"
+const version string = "1.0"
 
 var (
 	showVersion      = flag.Bool("version", false, "Print version information.")
@@ -115,7 +115,7 @@ func startServer() {
 	http.HandleFunc(*metricsPath, errorHandler(handleMetricsRequest))
 
 	log.Infof("Cache TTL: %v", time.Duration(*cacheTTL)*time.Second)
-	log.Infof("Cache cleanup interval (seconds): %v", time.Duration(*cacheCleanUp)*time.Second)
+	log.Infof("Cache cleanup interval: %v", time.Duration(*cacheCleanUp)*time.Second)
 	atlas.InitCache(time.Duration(*cacheTTL)*time.Second, time.Duration(*cacheCleanUp)*time.Second)
 
 	log.Infof("Listening for %s on %s", *metricsPath, *listenAddress)
