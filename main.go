@@ -96,7 +96,7 @@ func loadConfig() error {
 }
 
 func startServer() {
-	log.Infof("Starting atlas exporter (Version: %s)\n", version)
+	log.Infof("Starting atlas exporter (Version: %s)", version)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<html>
 			<head><title>RIPE Atlas Exporter (Version ` + version + `)</title></head>
