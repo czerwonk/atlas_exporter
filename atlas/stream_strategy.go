@@ -62,10 +62,17 @@ func (s *streamingStrategy) startListening(ctx context.Context, m config.Measure
 		case <-ctx.Done():
 			return
 		case <-time.After(connectionRetryInterval):
-			delete(s.measurements, m.ID)
+			s.clearResults(m.ID)
 			continue
 		}
 	}
+}
+
+func (s *streamingStrategy) clearResults(id string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	delete(s.measurements, id)
 }
 
 func (s *streamingStrategy) timeoutForMeasurement(m config.Measurement) time.Duration {
