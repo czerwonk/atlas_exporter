@@ -1,15 +1,11 @@
 FROM golang as builder
-RUN go get github.com/czerwonk/atlas_exporter
-
+RUN go get -d -v github.com/czerwonk/atlas_exporter
+WORKDIR /go/src/github.com/czerwonk/atlas_exporter
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
 
 FROM alpine:latest
-
 RUN apk --no-cache add ca-certificates
-
-RUN mkdir /app
 WORKDIR /app
-COPY --from=builder /go/bin/atlas_exporter .
-
-CMD /app/atlas_exporter
-
+COPY --from=builder /go/src/github.com/czerwonk/atlas_exporter/app atlas_exporter
+CMD ./atlas_exporter
 EXPOSE 9400
