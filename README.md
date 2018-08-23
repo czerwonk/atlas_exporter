@@ -34,9 +34,14 @@ go get -u github.com/czerwonk/atlas_exporter
 ```
 
 ## Docker
+To start the server:
 ```
 docker run -d --restart unless-stopped -p 9400:9400 czerwonk/atlas_exporter
 ```
+To run in config file mode:
+```
+docker run -d -e CONFIG=/tmp/config.yml -v /tmp/config.yml:/tmp/config.yml --restart unless-stopped -p 9400:9400 czerwonk/atlas_exporter 
+``` 
 
 ## Usage
 ### Start server
