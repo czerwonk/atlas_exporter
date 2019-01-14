@@ -1,2 +1,0 @@
-name (string): tagname,
-slug (string): tag as a slug, the tagname in lowercase and hyphenated (for use in URLs).

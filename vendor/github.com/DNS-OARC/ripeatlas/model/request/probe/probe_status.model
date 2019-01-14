@@ -1,3 +1,0 @@
-status (string),
-id (integer),
-name (string)

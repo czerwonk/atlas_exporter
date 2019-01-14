@@ -1,7 +1,6 @@
 language: go
 go:
-- "1.10"
-script: make init test vet lint gox
+- "1.11"
 deploy:
   provider: releases
   api_key:

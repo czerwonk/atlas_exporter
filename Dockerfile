@@ -1,4 +1,5 @@
 FROM golang as builder
+ENV GO111MODULE on
 RUN go get -d -v github.com/czerwonk/atlas_exporter
 WORKDIR /go/src/github.com/czerwonk/atlas_exporter
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
