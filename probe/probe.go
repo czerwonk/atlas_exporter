@@ -37,8 +37,8 @@ func (p *Probe) ASNForIPVersion(v int) int {
 	return p.Asn4
 }
 
-// Latitude of the geo location of the probe
-func (p *Probe) Latitude() string {
+// Longitude of the geo location of the probe
+func (p *Probe) Longitude() string {
 	if len(p.Geometry.Coordinates) == 0 {
 		return ""
 	}
@@ -46,8 +46,8 @@ func (p *Probe) Latitude() string {
 	return strconv.FormatFloat(p.Geometry.Coordinates[0], 'f', 4, 64)
 }
 
-// Longitude of the geo location of the probe
-func (p *Probe) Longitude() string {
+// Latitude of the geo location of the probe
+func (p *Probe) Latitude() string {
 	if len(p.Geometry.Coordinates) == 0 {
 		return ""
 	}
