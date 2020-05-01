@@ -17,7 +17,11 @@ import (
 	"github.com/prometheus/common/log"
 )
 
-const version string = "1.0"
+const (
+	generalTimeout        = 60 * time.Second
+	streamTimeout         = 5 * time.Minute
+	version        string = "1.0"
+)
 
 var (
 	showVersion      = flag.Bool("version", false, "Print version information.")
@@ -26,10 +30,10 @@ var (
 	cacheTTL         = flag.Int("cache.ttl", 3600, "Cache time to live in seconds")
 	cacheCleanUp     = flag.Int("cache.cleanup", 300, "Interval for cache clean up in seconds")
 	configFile       = flag.String("config.file", "", "Path to congig file to use")
-	timeout          = flag.Duration("timeout", 60*time.Second, "Timeout")
+	timeout          = flag.Duration("timeout", generalTimeout, "Timeout")
 	workerCount      = flag.Uint("worker.count", 8, "Number of go routines retrieving probe information")
 	streaming        = flag.Bool("streaming", true, "Retrieve data by subscribing to Atlas Streaming API")
-	streamingTimeout = flag.Duration("streaming.timeout", 5*time.Minute, "When no update is received in this timespan a reconnect is initiated.")
+	streamingTimeout = flag.Duration("streaming.timeout", streamTimeout, "When no update is received in this timespan a reconnect is initiated.")
 	cfg              *config.Config
 	strategy         atlas.Strategy
 )
