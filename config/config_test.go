@@ -30,8 +30,8 @@ measurements:
   - id: 456`,
 			expected: Config{
 				Measurements: []Measurement{
-					Measurement{ID: "123"},
-					Measurement{ID: "456"},
+					{ID: "123"},
+					{ID: "456"},
 				},
 				FilterInvalidResults: true,
 			},
@@ -52,7 +52,7 @@ histogram_buckets:
     rtt: [ 7.0, 8.0 ]`,
 			expected: Config{
 				Measurements: []Measurement{
-					Measurement{ID: "123"},
+					{ID: "123"},
 				},
 				HistogramBuckets: HistogramBuckets{
 					DNS: RttHistogramBucket{
@@ -84,7 +84,7 @@ measurements:
     timeout: 30s`,
 			expected: Config{
 				Measurements: []Measurement{
-					Measurement{ID: "123", Timeout: 30 * time.Second},
+					{ID: "123", Timeout: 30 * time.Second},
 				},
 				FilterInvalidResults: true,
 			},
