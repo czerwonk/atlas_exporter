@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/DNS-OARC/ripeatlas/measurement"
+	"github.com/DNS-OARC/ripeatlas/measurement/dns"
 	"github.com/czerwonk/atlas_exporter/probe"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -15,7 +16,7 @@ var (
 )
 
 func init() {
-	labels = []string{"measurement", "probe", "dst_addr", "asn", "ip_version", "country_code", "lat", "long"}
+	labels = []string{"measurement", "probe", "dst_addr", "asn", "ip_version", "country_code", "lat", "long", "rdata1"}
 
 	successDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "success"), "Destination was reachable", labels, nil)
 	rttDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "rtt"), "Roundtrip time in ms", labels, nil)
@@ -27,6 +28,20 @@ type dnsExporter struct {
 
 // Export exports a prometheus metric
 func (m *dnsExporter) Export(res *measurement.Result, probe *probe.Probe, ch chan<- prometheus.Metric) {
+	var rtt float64
+	var answers []*dns.Answer
+	if res.DnsResult() != nil {
+		rtt = res.DnsResult().Rt()
+		answers = res.DnsResult().Answers()
+	}
+
+	var rdata1 string
+	if len(answers) > 0 {
+		if len(answers[0].Rdata()) > 0 {
+			rdata1 = answers[0].Rdata()[0]
+		}
+	}
+
 	labelValues := []string{
 		m.id,
 		strconv.Itoa(probe.ID),
@@ -36,11 +51,7 @@ func (m *dnsExporter) Export(res *measurement.Result, probe *probe.Probe, ch cha
 		probe.CountryCode,
 		probe.Latitude(),
 		probe.Longitude(),
-	}
-
-	var rtt float64
-	if res.DnsResult() != nil {
-		rtt = res.DnsResult().Rt()
+		rdata1,
 	}
 
 	if rtt > 0 {
