@@ -2,6 +2,7 @@ package dns
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"strconv"
 
 	"github.com/DNS-OARC/ripeatlas/measurement"
@@ -56,7 +57,12 @@ func (m *dnsExporter) Export(res *measurement.Result, probe *probe.Probe, ch cha
 		for _, s := range opt.Option {
 			switch e := s.(type) {
 			case *mdns.EDNS0_NSID:
-				nsid = e.Nsid
+				b := []byte(e.Nsid)
+				dst := make([]byte, hex.DecodedLen(len(b)))
+				_, err := hex.Decode(dst, b)
+				if err == nil {
+					nsid = string(dst)
+				}
 			}
 		}
 	}
