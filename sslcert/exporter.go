@@ -1,6 +1,9 @@
 package sslcert
 
 import (
+	"crypto/sha256"
+	"encoding/pem"
+	"fmt"
 	"strconv"
 
 	"github.com/DNS-OARC/ripeatlas/measurement"
@@ -15,16 +18,17 @@ var (
 	successDesc          *prometheus.Desc
 	alertLevelDesc       *prometheus.Desc
 	alertDescriptionDesc *prometheus.Desc
+	certFingerprint      string
 )
 
 func init() {
-	labels = []string{"measurement", "probe", "dst_addr", "asn", "ip_version", "country_code", "lat", "long"}
+	labels = []string{"measurement", "probe", "dst_addr", "asn", "ip_version", "country_code", "lat", "long", "cert_fingerprint"}
 
 	successDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "success"), "Destination was reachable", labels, nil)
 	sslVerDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "version"), "SSL/TLS version used for the request", labels, nil)
 	rttDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "rtt"), "Round trip time in ms", labels, nil)
 	alertLevelDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "alert_level"), "Status of the SSL/TLS certificate (0 = valid)", labels, nil)
-	alertDescriptionDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "alert_description"), "Description for the alert level (see RIPIE Atlas documentation)", labels, nil)
+	alertDescriptionDesc = prometheus.NewDesc(prometheus.BuildFQName(ns, sub, "alert_description"), "Description for the alert level (see RIPE Atlas documentation)", labels, nil)
 }
 
 type sslCertExporter struct {
@@ -33,6 +37,13 @@ type sslCertExporter struct {
 
 // Export exports a prometheus metric
 func (m *sslCertExporter) Export(res *measurement.Result, probe *probe.Probe, ch chan<- prometheus.Metric) {
+	if len(res.Cert()) > 0 {
+		block, _ := pem.Decode([]byte(res.Cert()[0]))
+		if block != nil {
+			certFingerprint = fmt.Sprintf("%x", sha256.Sum256(block.Bytes))
+		}
+	}
+
 	labelValues := []string{
 		m.id,
 		strconv.Itoa(probe.ID),
@@ -42,6 +53,7 @@ func (m *sslCertExporter) Export(res *measurement.Result, probe *probe.Probe, ch
 		probe.CountryCode,
 		probe.Latitude(),
 		probe.Longitude(),
+		certFingerprint,
 	}
 
 	ver, _ := strconv.ParseFloat(res.Ver(), 64)
