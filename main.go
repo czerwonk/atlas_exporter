@@ -15,12 +15,14 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/log"
+
+	_ "net/http/pprof"
 )
 
 const (
-	generalTimeout        = 60 * time.Second
-	streamTimeout         = 5 * time.Minute
-	version        string = "1.0"
+	generalTimeout = 60 * time.Second
+	streamTimeout  = 5 * time.Minute
+	version        = "1.0.1"
 )
 
 var (
@@ -34,6 +36,7 @@ var (
 	workerCount      = flag.Uint("worker.count", 8, "Number of go routines retrieving probe information")
 	streaming        = flag.Bool("streaming", true, "Retrieve data by subscribing to Atlas Streaming API")
 	streamingTimeout = flag.Duration("streaming.timeout", streamTimeout, "When no update is received in this timespan a reconnect is initiated.")
+	profiling        = flag.Bool("profiling", false, "Enables pprof endpoints")
 	cfg              *config.Config
 	strategy         atlas.Strategy
 )
@@ -66,6 +69,10 @@ func main() {
 		strategy = atlas.NewStreamingStrategy(ctx, cfg, *workerCount, *streamingTimeout)
 	} else {
 		strategy = atlas.NewRequestStrategy(cfg, *workerCount)
+	}
+
+	if !*profiling {
+		http.DefaultServeMux = http.NewServeMux()
 	}
 
 	startServer()
