@@ -1,5 +1,4 @@
 # atlas_exporter 
-[![CircleCI](https://circleci.com/gh/czerwonk/atlas_exporter.svg?style=shield)](https://circleci.com/gh/czerwonk/atlas_exporter)
 [![Docker Build Status](https://img.shields.io/docker/build/czerwonk/atlas_exporter.svg)](https://hub.docker.com/r/czerwonk/atlas_exporter/builds)
 [![Go Report Card](https://goreportcard.com/badge/github.com/czerwonk/atlas_exporter)](https://goreportcard.com/report/github.com/czerwonk/atlas_exporter)
 
