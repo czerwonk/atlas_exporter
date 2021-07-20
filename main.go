@@ -55,8 +55,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	logger := log.Base()
-	logger.SetLevel(*logLevel)
+	setLogLevel(*logLevel)
 
 	if *showVersion {
 		printVersion()
