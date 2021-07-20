@@ -6,7 +6,7 @@ import (
 	"github.com/DNS-OARC/ripeatlas/measurement"
 	"github.com/czerwonk/atlas_exporter/probe"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/common/log"
+	log "github.com/sirupsen/logrus"
 )
 
 var (

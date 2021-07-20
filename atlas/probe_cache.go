@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/czerwonk/atlas_exporter/probe"
-	"github.com/prometheus/common/log"
+	log "github.com/sirupsen/logrus"
 )
 
 var cache *probe.Cache

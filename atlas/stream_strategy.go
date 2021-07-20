@@ -12,7 +12,7 @@ import (
 
 	"github.com/DNS-OARC/ripeatlas/measurement"
 	"github.com/czerwonk/atlas_exporter/config"
-	"github.com/prometheus/common/log"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/DNS-OARC/ripeatlas"
 )

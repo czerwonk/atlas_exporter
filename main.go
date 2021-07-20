@@ -14,7 +14,7 @@ import (
 	"github.com/czerwonk/atlas_exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/prometheus/common/log"
+	log "github.com/sirupsen/logrus"
 
 	_ "net/http/pprof"
 )
@@ -22,7 +22,7 @@ import (
 const (
 	generalTimeout = 60 * time.Second
 	streamTimeout  = 5 * time.Minute
-	version        = "1.0.1"
+	version        = "1.0.2"
 )
 
 var (
@@ -175,8 +175,11 @@ func handleMetricsRequest(w http.ResponseWriter, r *http.Request) error {
 		c := newCollector(measurements)
 		reg.MustRegister(c)
 
+		l := log.New()
+		l.Level = log.ErrorLevel
+
 		promhttp.HandlerFor(reg, promhttp.HandlerOpts{
-			ErrorLog:      log.NewErrorLogger(),
+			ErrorLog:      l,
 			ErrorHandling: promhttp.ContinueOnError}).ServeHTTP(w, r)
 	}
 
