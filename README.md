@@ -6,7 +6,7 @@ Metric exporter for RIPE Atlas measurement results
 ## Remarks
 * this is an early version, more features will be added step by step
 * at the moment only the last result of an measurement is used
-* the required Go version is 1.11+
+* the required Go version is 1.17+
 
 ## Streaming API
 Since version 0.8 atlas_exporter also supports retrieving measurement results by RIPE Atlas Streaming API (https://atlas.ripe.net/docs/result-streaming/). Using this feature requires config file mode. All configured measurements are subscribed on start so the latest result for each probe is updated continuously and scrape time is reduced significantly. When a socket.io connection fails or times out a reconnect is initiated. The timeout can be configured using the `-streaming.timeout` parameter. Streaming API is the default for config file mode, it can be disabled by setting `-streaming` to false.
