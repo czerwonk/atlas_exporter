@@ -22,26 +22,27 @@ import (
 const (
 	generalTimeout = 60 * time.Second
 	streamTimeout  = 5 * time.Minute
-	version        = "1.0.2"
+	version        = "1.0.3"
 )
 
 var (
-	showVersion      = flag.Bool("version", false, "Print version information.")
-	listenAddress    = flag.String("web.listen-address", ":9400", "Address on which to expose metrics and web interface.")
-	metricsPath      = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
-	cacheTTL         = flag.Int("cache.ttl", 3600, "Cache time to live in seconds")
-	cacheCleanUp     = flag.Int("cache.cleanup", 300, "Interval for cache clean up in seconds")
-	configFile       = flag.String("config.file", "", "Path to congig file to use")
-	timeout          = flag.Duration("timeout", generalTimeout, "Timeout")
-	workerCount      = flag.Uint("worker.count", 8, "Number of go routines retrieving probe information")
-	streaming        = flag.Bool("streaming", true, "Retrieve data by subscribing to Atlas Streaming API")
-	streamingTimeout = flag.Duration("streaming.timeout", streamTimeout, "When no update is received in this timespan a reconnect is initiated.")
-	profiling        = flag.Bool("profiling", false, "Enables pprof endpoints")
-	goMetrics        = flag.Bool("metrics.go", true, "Enables go runtime prometheus metrics")
-	processMetrics   = flag.Bool("metrics.process", true, "Enables process runtime prometheus metrics")
-	logLevel         = flag.String("log.level", "info", "Only log messages with the given severity or above. Valid levels: [debug, info, warn, error, fatal]")
-	cfg              *config.Config
-	strategy         atlas.Strategy
+	showVersion         = flag.Bool("version", false, "Print version information.")
+	listenAddress       = flag.String("web.listen-address", ":9400", "Address on which to expose metrics and web interface.")
+	metricsPath         = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
+	cacheTTL            = flag.Int("cache.ttl", 3600, "Cache time to live in seconds")
+	cacheCleanUp        = flag.Int("cache.cleanup", 300, "Interval for cache clean up in seconds")
+	configFile          = flag.String("config.file", "", "Path to congig file to use")
+	timeout             = flag.Duration("timeout", generalTimeout, "Timeout")
+	workerCount         = flag.Uint("worker.count", 8, "Number of go routines retrieving probe information")
+	streaming           = flag.Bool("streaming", true, "Retrieve data by subscribing to Atlas Streaming API")
+	streamingBufferSize = flag.Uint("streaming.buffer-size", 100, "Size of buffer to prevent locking socket.io go routines")
+	streamingTimeout    = flag.Duration("streaming.timeout", streamTimeout, "When no update is received in this timespan a reconnect is initiated.")
+	profiling           = flag.Bool("profiling", false, "Enables pprof endpoints")
+	goMetrics           = flag.Bool("metrics.go", true, "Enables go runtime prometheus metrics")
+	processMetrics      = flag.Bool("metrics.process", true, "Enables process runtime prometheus metrics")
+	logLevel            = flag.String("log.level", "info", "Only log messages with the given severity or above. Valid levels: [debug, info, warn, error, fatal]")
+	cfg                 *config.Config
+	strategy            atlas.Strategy
 )
 
 func init() {
@@ -71,7 +72,7 @@ func main() {
 	if *streaming {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		strategy = atlas.NewStreamingStrategy(ctx, cfg, *workerCount, *streamingTimeout)
+		strategy = atlas.NewStreamingStrategy(ctx, cfg, *streamingBufferSize, *streamingTimeout)
 	} else {
 		strategy = atlas.NewRequestStrategy(cfg, *workerCount)
 	}
