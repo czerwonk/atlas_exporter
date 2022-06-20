@@ -9,7 +9,7 @@ require (
 	github.com/miekg/dns v1.1.43 // indirect
 	github.com/prometheus/client_golang v1.12.2
 	github.com/sirupsen/logrus v1.8.1
-	github.com/stretchr/testify v1.7.2
+	github.com/stretchr/testify v1.7.3
 	gopkg.in/yaml.v2 v2.4.0
 )
 
