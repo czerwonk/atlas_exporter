@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-const IPv6 int = 6
+const ipv6 int = 6
 
 // Probe holds information about a single Atlas probe
 type Probe struct {
@@ -32,7 +32,7 @@ func FromJSON(body []byte) (*Probe, error) {
 
 // ASNForIPVersion return the ASN for the given IP Version
 func (p *Probe) ASNForIPVersion(v int) int {
-	if v == IPv6 {
+	if v == ipv6 {
 		return p.Asn6
 	}
 
