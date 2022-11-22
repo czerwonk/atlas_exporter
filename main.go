@@ -5,7 +5,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
@@ -13,6 +12,7 @@ import (
 	"github.com/czerwonk/atlas_exporter/atlas"
 	"github.com/czerwonk/atlas_exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 
@@ -98,7 +98,7 @@ func loadConfig() error {
 		return nil
 	}
 
-	b, err := ioutil.ReadFile(*configFile)
+	b, err := os.ReadFile(*configFile)
 	if err != nil {
 		return fmt.Errorf("could not open config file: %v", err)
 	}
@@ -179,13 +179,13 @@ func handleMetricsRequest(w http.ResponseWriter, r *http.Request) error {
 
 	// add process metrics
 	if *processMetrics {
-		processCollector := prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{})
+		processCollector := collectors.NewProcessCollector(collectors.ProcessCollectorOpts{})
 		reg.MustRegister(processCollector)
 	}
 
 	// add go collector metrics
 	if *goMetrics {
-		goCollector := prometheus.NewGoCollector()
+		goCollector := collectors.NewGoCollector()
 		reg.MustRegister(goCollector)
 	}
 
