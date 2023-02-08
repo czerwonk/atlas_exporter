@@ -41,6 +41,9 @@ var (
 	goMetrics           = flag.Bool("metrics.go", true, "Enables go runtime prometheus metrics")
 	processMetrics      = flag.Bool("metrics.process", true, "Enables process runtime prometheus metrics")
 	logLevel            = flag.String("log.level", "info", "Only log messages with the given severity or above. Valid levels: [debug, info, warn, error, fatal]")
+	tlsEnabled          = flag.Bool("tls.enabled", false, "Enables TLS")
+	tlsCertChainPath    = flag.String("tls.cert-file", "", "Path to TLS cert file")
+	tlsKeyPath          = flag.String("tls.key-file", "", "Path to TLS key file")
 	cfg                 *config.Config
 	strategy            atlas.Strategy
 )
@@ -135,7 +138,12 @@ func startServer() {
 	log.Infof("Cache cleanup interval: %v", time.Duration(*cacheCleanUp)*time.Second)
 	atlas.InitCache(time.Duration(*cacheTTL)*time.Second, time.Duration(*cacheCleanUp)*time.Second)
 
-	log.Infof("Listening for %s on %s", *metricsPath, *listenAddress)
+	log.Infof("Listening for %s on %s (TLS: %v)", *metricsPath, *listenAddress, *tlsEnabled)
+	if *tlsEnabled {
+		log.Fatal(http.ListenAndServeTLS(*listenAddress, *tlsCertChainPath, *tlsKeyPath, nil))
+		return
+	}
+
 	log.Fatal(http.ListenAndServe(*listenAddress, nil))
 }
 
