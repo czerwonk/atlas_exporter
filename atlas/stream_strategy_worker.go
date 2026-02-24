@@ -63,6 +63,9 @@ func (w *streamStrategyWorker) subscribe() (<-chan *measurement.Result, error) {
 }
 
 func (w *streamStrategyWorker) listenForResults(ctx context.Context, timeout time.Duration, ch <-chan *measurement.Result) {
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+
 	for {
 		select {
 		case m, ok := <-ch:
@@ -84,8 +87,10 @@ func (w *streamStrategyWorker) listenForResults(ctx context.Context, timeout tim
 				return
 			}
 
+			timer.Reset(timeout)
+
 			w.resultCh <- m
-		case <-time.After(timeout):
+		case <-timer.C:
 			log.Errorf("Timeout reached for measurement #%s. Trying to reconnect.", w.measurement.ID)
 			return
 		case <-ctx.Done():
