@@ -5,7 +5,7 @@ package config
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
+
 	"time"
 
 	yaml "gopkg.in/yaml.v2"
@@ -50,7 +50,7 @@ func (c *Config) MeasurementIDs() []string {
 
 // Load loads a config from a reader
 func Load(r io.Reader) (*Config, error) {
-	b, err := ioutil.ReadAll(r)
+	b, err := io.ReadAll(r)
 	if err != nil {
 		return nil, fmt.Errorf("could not load config: %v", err)
 	}

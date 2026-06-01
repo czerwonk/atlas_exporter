@@ -68,7 +68,7 @@ func startConsumers(idChan chan int, out chan<- *probe.Probe, errCh chan<- error
 	wg := sync.WaitGroup{}
 	wg.Add(workers)
 
-	for i := 0; i < workers; i++ {
+	for range workers {
 		go func() {
 			defer wg.Done()
 			for id := range idChan {
