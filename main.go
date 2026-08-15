@@ -24,7 +24,7 @@ import (
 const (
 	generalTimeout = 60 * time.Second
 	streamTimeout  = 5 * time.Minute
-	version        = "1.0.5"
+	version        = "1.0.6"
 )
 
 var (
