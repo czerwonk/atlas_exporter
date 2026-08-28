@@ -45,7 +45,11 @@ func (s *streamingStrategy) start(ctx context.Context, measurements []config.Mea
 			measurement: m,
 			timeout:     s.timeoutForMeasurement(m),
 		}
-		go w.run(ctx)
+		go func() {
+			if err := w.run(ctx); err != nil {
+				log.Error(err)
+			}
+		}()
 	}
 
 	go s.processMeasurementResults(resultCh, resetCh)

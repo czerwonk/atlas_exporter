@@ -120,7 +120,7 @@ func loadConfig() error {
 func startServer() {
 	log.Infof("Starting atlas exporter (Version: %s)", version)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`<html>
+		_, err := w.Write([]byte(`<html>
 			<head><title>RIPE Atlas Exporter (Version ` + version + `)</title></head>
 			<body>
 			<h1>RIPE Atlas Exporter</h1>
@@ -133,6 +133,9 @@ func startServer() {
 			<p><a href="https://github.com/czerwonk/atlas_exporter">github.com/czerwonk/atlas_exporter</a></p>
 			</body>
 			</html>`))
+		if err != nil {
+			log.Error(err)
+		}
 	})
 	http.HandleFunc(*metricsPath, errorHandler(handleMetricsRequest))
 
