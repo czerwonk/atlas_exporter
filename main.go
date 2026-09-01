@@ -7,7 +7,9 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"html"
 	"net/http"
+	"net/http/pprof"
 	"os"
 	"time"
 
@@ -17,14 +19,15 @@ import (
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
-
-	_ "net/http/pprof"
 )
 
 const (
-	generalTimeout = 60 * time.Second
-	streamTimeout  = 5 * time.Minute
-	version        = "1.0.6"
+	generalTimeout    = 60 * time.Second
+	streamTimeout     = 5 * time.Minute
+	readHeaderTimeout = 5 * time.Second
+	readTimeout       = 15 * time.Second
+	idleTimeout       = 60 * time.Second
+	version           = "1.0.6"
 )
 
 var (
@@ -82,10 +85,6 @@ func main() {
 		strategy = atlas.NewRequestStrategy(cfg, *workerCount)
 	}
 
-	if !*profiling {
-		http.DefaultServeMux = http.NewServeMux()
-	}
-
 	startServer()
 }
 
@@ -119,37 +118,62 @@ func loadConfig() error {
 
 func startServer() {
 	log.Infof("Starting atlas exporter (Version: %s)", version)
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := w.Write([]byte(`<html>
-			<head><title>RIPE Atlas Exporter (Version ` + version + `)</title></head>
-			<body>
-			<h1>RIPE Atlas Exporter</h1>
-			<h2>Example</h2>
-			<p>Metrics for measurement configured in configuration file:</p>
-			<p><a href="` + *metricsPath + `">` + r.Host + *metricsPath + `</a></p>
-			<p>Metrics for measurement with id 8809582:</p>
-			<p><a href="` + *metricsPath + `?measurement_id=8809582">` + r.Host + *metricsPath + `?measurement_id=8809582</a></p>
-			<h2>More information</h2>
-			<p><a href="https://github.com/czerwonk/atlas_exporter">github.com/czerwonk/atlas_exporter</a></p>
-			</body>
-			</html>`))
-		if err != nil {
-			log.Error(err)
-		}
-	})
-	http.HandleFunc(*metricsPath, errorHandler(handleMetricsRequest))
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", handleIndexRequest)
+	mux.HandleFunc(*metricsPath, errorHandler(handleMetricsRequest))
+
+	if *profiling {
+		log.Info("Profiling enabled, exposing pprof endpoints under /debug/pprof")
+		mux.HandleFunc("/debug/pprof/", pprof.Index)
+		mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+		mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+		mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+		mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	}
 
 	log.Infof("Cache TTL: %v", time.Duration(*cacheTTL)*time.Second)
 	log.Infof("Cache cleanup interval: %v", time.Duration(*cacheCleanUp)*time.Second)
 	atlas.InitCache(time.Duration(*cacheTTL)*time.Second, time.Duration(*cacheCleanUp)*time.Second)
 
+	server := &http.Server{
+		Addr:              *listenAddress,
+		Handler:           mux,
+		ReadHeaderTimeout: readHeaderTimeout,
+		ReadTimeout:       readTimeout,
+		WriteTimeout:      *timeout + readTimeout,
+		IdleTimeout:       idleTimeout,
+	}
+
 	log.Infof("Listening for %s on %s (TLS: %v)", *metricsPath, *listenAddress, *tlsEnabled)
 	if *tlsEnabled {
-		log.Fatal(http.ListenAndServeTLS(*listenAddress, *tlsCertChainPath, *tlsKeyPath, nil))
+		log.Fatal(server.ListenAndServeTLS(*tlsCertChainPath, *tlsKeyPath))
 		return
 	}
 
-	log.Fatal(http.ListenAndServe(*listenAddress, nil))
+	log.Fatal(server.ListenAndServe())
+}
+
+func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
+	host := html.EscapeString(r.Host)
+	path := html.EscapeString(*metricsPath)
+
+	_, err := w.Write([]byte(`<html>
+		<head><title>RIPE Atlas Exporter (Version ` + version + `)</title></head>
+		<body>
+		<h1>RIPE Atlas Exporter</h1>
+		<h2>Example</h2>
+		<p>Metrics for measurement configured in configuration file:</p>
+		<p><a href="` + path + `">` + host + path + `</a></p>
+		<p>Metrics for measurement with id 8809582:</p>
+		<p><a href="` + path + `?measurement_id=8809582">` + host + path + `?measurement_id=8809582</a></p>
+		<h2>More information</h2>
+		<p><a href="https://github.com/czerwonk/atlas_exporter">github.com/czerwonk/atlas_exporter</a></p>
+		</body>
+		</html>`))
+	if err != nil {
+		log.Error(err)
+	}
 }
 
 func errorHandler(f func(http.ResponseWriter, *http.Request) error) http.HandlerFunc {
