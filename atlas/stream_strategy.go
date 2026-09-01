@@ -42,6 +42,7 @@ func (s *streamingStrategy) start(ctx context.Context, measurements []config.Mea
 	for _, m := range measurements {
 		w := &streamStrategyWorker{
 			resultCh:    resultCh,
+			resetCh:     resetCh,
 			measurement: m,
 			timeout:     s.timeoutForMeasurement(m),
 		}
@@ -102,7 +103,8 @@ func (s *streamingStrategy) add(m *measurement.Result, probe *probe.Probe) {
 	mes, found := s.measurements[msm]
 	if !found {
 		var err error
-		mes, err = measurementForType(m.Type(), msm, strconv.Itoa(m.Af()), s.cfg)
+		ipVersion := exporter.IpVersionForMeasurement(m)
+		mes, err = measurementForType(m.Type(), msm, ipVersion, s.cfg)
 		if err != nil {
 			log.Error(err)
 			return

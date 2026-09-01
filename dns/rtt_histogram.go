@@ -33,12 +33,24 @@ func newRttHistogram(id, ipVersion string, buckets []float64) exporter.Histogram
 }
 
 func (h *rttHistogram) ProcessResult(r *measurement.Result) {
-	if r.DnsResult() == nil {
+	if rs := r.DnsResultsets(); len(rs) > 0 {
+		for _, s := range rs {
+			if s == nil || s.Result() == nil {
+				continue
+			}
+
+			rt := s.Result().Rt()
+			if rt > 0 {
+				h.rtt.Observe(rt)
+			}
+		}
 		return
 	}
 
-	if r.DnsResult().Rt() > 0 {
-		h.rtt.Observe(r.DnsResult().Rt())
+	if dr := r.DnsResult(); dr != nil {
+		if rt := dr.Rt(); rt > 0 {
+			h.rtt.Observe(rt)
+		}
 	}
 }
 

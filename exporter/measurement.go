@@ -3,6 +3,8 @@
 package exporter
 
 import (
+	"strconv"
+
 	"github.com/DNS-OARC/ripeatlas/measurement"
 	"github.com/czerwonk/atlas_exporter/probe"
 	"github.com/prometheus/client_golang/prometheus"
@@ -82,4 +84,21 @@ func (r *Measurement) Collect(ch chan<- prometheus.Metric) {
 	for _, h := range r.histograms {
 		h.Hist().Collect(ch)
 	}
+}
+
+func IpVersionForMeasurement(r *measurement.Result) string {
+	if af := r.Af(); af == 4 || af == 6 {
+		return strconv.Itoa(af)
+	}
+
+	if r.Type() == "dns" {
+		rs := r.DnsResultsets()
+		if len(rs) > 0 && rs[0] != nil {
+			if af := rs[0].Af(); af == 4 || af == 6 {
+				return strconv.Itoa(af)
+			}
+		}
+	}
+
+	return "0"
 }

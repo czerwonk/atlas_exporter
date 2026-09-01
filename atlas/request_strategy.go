@@ -4,7 +4,6 @@ package atlas
 
 import (
 	"context"
-	"strconv"
 	"sync"
 
 	"github.com/czerwonk/atlas_exporter/exporter"
@@ -84,7 +83,8 @@ func (s *requestStrategy) getMeasurementForID(ctx context.Context, id string, ch
 	}
 
 	first := res[0]
-	mes, err := measurementForType(first.Type(), id, strconv.Itoa(first.Af()), s.cfg)
+	ipVersion := exporter.IpVersionForMeasurement(first)
+	mes, err := measurementForType(first.Type(), id, ipVersion, s.cfg)
 	if err != nil {
 		log.Errorln(err)
 		return
