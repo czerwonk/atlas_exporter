@@ -1,8 +1,0 @@
-#!/bin/bash
-set -e
-export CONFIG=${CONFIG}
-if [ -z ${CONFIG} ]; then
-    ./atlas_exporter
-else 
-    ./atlas_exporter -config.file ${CONFIG}
-fi

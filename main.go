@@ -96,13 +96,25 @@ func printVersion() {
 	fmt.Println("This software uses Go bindings from the DNS-OARC project (https://github.com/DNS-OARC/ripeatlas)")
 }
 
+// resolveConfigFilePath falls back to the CONFIG environment variable when no
+// config file flag is given. This keeps `docker run -e CONFIG=...` working
+// since the distroless image has no shell to translate it into a flag.
+func resolveConfigFilePath(flagValue string) string {
+	if len(flagValue) > 0 {
+		return flagValue
+	}
+
+	return os.Getenv("CONFIG")
+}
+
 func loadConfig() error {
-	if len(*configFile) == 0 {
+	path := resolveConfigFilePath(*configFile)
+	if len(path) == 0 {
 		cfg = &config.Config{}
 		return nil
 	}
 
-	b, err := os.ReadFile(*configFile)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return fmt.Errorf("could not open config file: %v", err)
 	}
