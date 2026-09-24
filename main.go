@@ -27,7 +27,7 @@ const (
 	readHeaderTimeout = 5 * time.Second
 	readTimeout       = 15 * time.Second
 	idleTimeout       = 60 * time.Second
-	version           = "1.0.6"
+	version           = "1.0.7"
 )
 
 var (
