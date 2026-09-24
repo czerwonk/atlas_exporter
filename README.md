@@ -49,6 +49,8 @@ To run in config file mode:
 docker run -d -e CONFIG=/tmp/config.yml -v /tmp/config.yml:/tmp/config.yml --restart unless-stopped -p 9400:9400 czerwonk/atlas_exporter
 ```
 
+The image is based on distroless and runs as the non-root user `nonroot` (UID/GID 65532), so the mounted config file must be readable by that user.
+
 ## Usage
 
 ### Start server

@@ -32,6 +32,5 @@ FROM gcr.io/distroless/static-debian13:nonroot@sha256:e2e927ec666bae08560abb3c55
 WORKDIR /app
 COPY --from=builder /out/atlas_exporter /app/atlas_exporter
 
-USER 1000:1000
 EXPOSE 9400
 ENTRYPOINT ["/app/atlas_exporter"]
