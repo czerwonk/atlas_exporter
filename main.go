@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/pprof"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/czerwonk/atlas_exporter/atlas"
@@ -114,7 +115,7 @@ func loadConfig() error {
 		return nil
 	}
 
-	b, err := os.ReadFile(path)
+	b, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
 		return fmt.Errorf("could not open config file: %v", err)
 	}
