@@ -1,6 +1,6 @@
 module github.com/czerwonk/atlas_exporter
 
-go 1.26.10
+go 1.26.11
 
 require (
 	github.com/DNS-OARC/ripeatlas v0.1.1
