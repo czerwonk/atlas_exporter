@@ -4,6 +4,7 @@ package exporter
 
 import (
 	"strconv"
+	"sync"
 
 	"github.com/DNS-OARC/ripeatlas/measurement"
 	"github.com/czerwonk/atlas_exporter/probe"
@@ -29,6 +30,7 @@ func WithValidator(v ResultValidator) MeasurementOpt {
 
 // Measurement handles measurement results and converts to metrics
 type Measurement struct {
+	mu         sync.RWMutex
 	latest     map[int]*measurement.Result
 	probes     map[int]*probe.Probe
 	histograms []Histogram
@@ -58,8 +60,10 @@ func (r *Measurement) Add(m *measurement.Result, probe *probe.Probe) {
 		return
 	}
 
+	r.mu.Lock()
 	r.latest[m.PrbId()] = m
 	r.probes[m.PrbId()] = probe
+	r.mu.Unlock()
 
 	for _, h := range r.histograms {
 		h.ProcessResult(m)
@@ -77,6 +81,9 @@ func (r *Measurement) Describe(ch chan<- *prometheus.Desc) {
 
 // Collect collects metrics for the `Measurement`
 func (r *Measurement) Collect(ch chan<- prometheus.Metric) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
 	for _, v := range r.latest {
 		r.exporter.Export(v, r.probes[v.PrbId()], ch)
 	}

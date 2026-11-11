@@ -46,20 +46,17 @@ func (c *Cache) Add(id int, p *Probe) {
 
 // CleanUp removes expired cache items
 func (c *Cache) CleanUp() int {
-	expired := make([]int, 0)
-
-	for k, v := range c.cache {
-		if v.expires.Before(time.Now()) {
-			expired = append(expired, k)
-		}
-	}
-
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	for _, id := range expired {
-		delete(c.cache, id)
+	removed := 0
+	now := time.Now()
+	for k, v := range c.cache {
+		if v.expires.Before(now) {
+			delete(c.cache, k)
+			removed++
+		}
 	}
 
-	return len(expired)
+	return removed
 }
